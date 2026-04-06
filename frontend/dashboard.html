@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智星空间天地一体化综合服务平台</title>
+    
+    <!-- 引入开源地图库 -->
+    <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /> -->
+    <link rel="icon" type="image/jpeg" href="access/image/logo.jpg">
+    <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> -->
+    <link rel="stylesheet" href="lib/left/leaflet.css" />
+    <script src="lib/left/Leaflet.js"></script>
+    
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/country-labels.css" />
+    <link rel="stylesheet" href="css/modal.css" />
+    
+    <script>
+        // 响应式字体大小
+        (function() {
+            function setFontSize() {
+                var width = window.innerWidth;
+                document.documentElement.style.fontSize = width / 22 + 'px';
+            }
+            setFontSize();
+            window.addEventListener('resize', setFontSize);
+        })();
+    </script>
+</head>
+<body>
+
+<div class="main">
+    <!-- 头部 -->
+    <div class="header">
+        <div class="header-left" id="time"></div>
+        <div class="header-center">
+            <h1>智星一体・服务全域</h1>
+        </div>
+        <div class="header-right" style="display: flex; align-items: center; justify-content: flex-end; padding-right: .5rem;">
+            <button
+                id="btn-logout"
+                type="button"
+                style="min-width: 1.4rem; height: .48rem; padding: 0 .24rem; border: 1px solid #ff9f43; border-radius: .24rem; background: rgba(255, 126, 95, 0.16); color: #ffd9b3; font: inherit; font-size: .16rem; font-weight: bold; cursor: pointer;"
+            >&#36864;&#20986;&#30331;&#24405;</button>
+        </div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 左侧面板 -->
+        <div class="content-left">
+            <!-- 坐标输入 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>坐标定位</span>
+                </div>
+                <div class="panel-content">
+                    <div class="form-group">
+                        <label>粗略地址搜索</label>
+                        <input type="text" id="addr_search" placeholder="如：北京市朝阳区">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="searchAddress()">搜索地址</button>
+                    </div>
+                    <div class="form-group">
+                        <label>经度 (东经E 西经W)</label>
+                        <input type="text" id="lng_input" placeholder="如：116.403874">
+                    </div>
+                    <div class="form-group">
+                        <label>纬度 (北纬N 南纬S)</label>
+                        <input type="text" id="lat_input" placeholder="如：39.914885">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="manualLocate()">定位</button>
+                        <button class="btn btn-secondary" onclick="resetAll()">清空</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 位置信息 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>位置信息</span>
+                </div>
+                <div class="panel-content">
+                    <table class="info-table">
+                        <tr>
+                            <td class="label">经纬度</td>
+                            <td class="value" id="res_pos">点击地图获取</td>
+                        </tr>
+                        <!-- 国家/地区和详细地址已注释
+                        <tr>
+                            <td class="label">国家/地区</td>
+                            <td class="value highlight" id="res_country">--</td>
+                        </tr>
+                        <tr>
+                            <td class="label">详细地址</td>
+                            <td class="value" id="res_addr">--</td>
+                        </tr>
+                        -->
+                        <tr>
+                            <td class="label">度格式</td>
+                            <td class="value" id="res_deg">--</td>
+                        </tr>
+                        <tr>
+                            <td class="label">度分秒</td>
+                            <td class="value" id="res_dms">--</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 使用说明 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>使用说明</span>
+                </div>
+                <div class="panel-content">
+                    <div class="tips">
+                        <p>1. 先搜索粗略地址快速定位区域</p>
+                        <p>2. 再点击地图获取精确经纬度</p>
+                        <p>3. 精度建议：6位小数（约0.11米）</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间地图 -->
+        <div class="content-center">
+            <div id="map"></div>
+        </div>
+
+        <!-- 右侧面板 -->
+        <div class="content-right">
+            <!-- 任务操作 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>任务操作</span>
+                </div>
+                <div class="panel-content" style="display: flex; gap: 10px;">
+                    <button class="btn btn-order" id="btn-order" style="flex: 1;" onclick="placeOrder()">下单</button>
+                    <button class="btn btn-secondary" id="btn-data-delivery" style="flex: 1;" onclick="queryDataDelivery()">交付数据信息</button>
+                </div>
+            </div>
+
+            <!-- 系统统计 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>系统统计</span>
+                </div>
+                <div class="panel-content">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">365</div>
+                            <div class="stat-label">卫星覆盖区域</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">83%</div>
+                            <div class="stat-label">系统可用率</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">1,268</div>
+                            <div class="stat-label">累计任务数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">95%</div>
+                            <div class="stat-label">任务成功率</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最近任务 -->
+            <div class="panel panel-flex">
+                <div class="panel-title">
+                    <span>最近任务</span>
+                </div>
+                <div class="panel-content">
+                    <div class="task-list">
+                        <div class="task-item">
+                            <span class="task-status success">●</span>
+                            <span class="task-info">任务 #1234 - 已完成</span>
+                            <span class="task-time">2分钟前</span>
+                        </div>
+                        <div class="task-item">
+                            <span class="task-status processing">●</span>
+                            <span class="task-info">任务 #1233 - 处理中</span>
+                            <span class="task-time">5分钟前</span>
+                        </div>
+                        <div class="task-item">
+                            <span class="task-status success">●</span>
+                            <span class="task-info">任务 #1232 - 已完成</span>
+                            <span class="task-time">10分钟前</span>
+                        </div>
+                        <div class="task-item">
+                            <span class="task-status success">●</span>
+                            <span class="task-info">任务 #1231 - 已完成</span>
+                            <span class="task-time">15分钟前</span>
+                        </div>
+                        <div class="task-item">
+                            <span class="task-status failed">●</span>
+                            <span class="task-info">任务 #1230 - 失败</span>
+                            <span class="task-time">20分钟前</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 席位结果弹窗 -->
+<div id="resultModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>席位时间预测结果</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 确认提交弹窗 -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content confirm-modal-content">
+        <div class="modal-header">
+            <h2>🚀 确认提交成像任务</h2>
+            <span class="close" onclick="closeConfirmModal()">&times;</span>
+        </div>
+        <div class="modal-body confirm-modal-body" id="confirmModalBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeConfirmModal()">取消</button>
+            <button class="btn btn-primary" id="confirmSubmitBtn">确定提交</button>
+        </div>
+    </div>
+</div>
+
+<!-- 数据交付弹窗 -->
+<div id="deliveryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📦 已交付数据查询</h2>
+            <span class="close" onclick="closeDeliveryModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="deliveryModalBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeDeliveryModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 引入模块化JavaScript -->
+<script src="js/utils.js"></script>
+<script src="js/country-labels.js"></script>
+<script src="js/map.js"></script>
+<script src="/runtime-config.js"></script>
+<script src="js/api-config.js"></script>
+<script src="js/auth-store.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/seat-query.js"></script>
+<script src="js/task-submit.js"></script>
+<script src="js/data-delivery.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+// 顶部时间显示
+function updateTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    const second = String(now.getSeconds()).padStart(2, '0');
+    const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    const weekDay = weekDays[now.getDay()];
+    
+    document.getElementById('time').innerHTML = 
+        `${year}-${month}-${day}&nbsp;&nbsp;${hour}:${minute}:${second}&nbsp;&nbsp;${weekDay}`;
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+var logoutButton = document.getElementById('btn-logout');
+if (logoutButton) {
+    logoutButton.addEventListener('click', async function() {
+        if (typeof logoutCurrentUser === 'function') {
+            await logoutCurrentUser();
+            return;
+        }
+        if (typeof clearAuthSession === 'function') {
+            clearAuthSession();
+        }
+        if (typeof redirectToLogin === 'function') {
+            redirectToLogin();
+        }
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "task-dashboard-proxy",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static dashboard with proxy server",
+  "scripts": {
+    "start": "node server.js",
+    "lint": "node -e \"process.stdout.write('No lint configured\\n')\"",
+    "typecheck": "node -e \"process.stdout.write('No typecheck configured\\n')\""
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,92 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户注册</title>
+  <link rel="stylesheet" href="/login/login.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="visual" aria-label="注册视觉区域">
+      <header class="visual-head">
+        <p class="visual-company">北京智星空间科技有限公司</p>
+        <h2 class="visual-title">遥感服务下单平台</h2>
+        <p class="visual-subtitle">Remote Sensing Service Ordering Platform</p>
+      </header>
+      <div class="scene">
+        <div class="character purple" aria-hidden="true">
+          <div class="face">
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+            <span class="mouth"></span>
+          </div>
+        </div>
+        <div class="character black" aria-hidden="true">
+          <div class="face">
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+            <span class="mouth"></span>
+          </div>
+        </div>
+        <div class="character yellow" aria-hidden="true">
+          <div class="face">
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+            <span class="mouth"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="form-panel" aria-label="注册表单区域">
+      <div class="form-wrap">
+        <div class="brand">
+          <span class="brand-badge"></span>
+          <span>ZHIXIN SPACE</span>
+        </div>
+        <h1>创建账号</h1>
+        <p class="subtitle">请完善注册信息，注册邮箱将用于找回密码</p>
+        <form id="registerForm" novalidate>
+          <div class="field">
+            <label for="registerUsername">账号</label>
+            <input class="input" id="registerUsername" name="registerUsername" type="text" autocomplete="username" placeholder="请输入账号" />
+          </div>
+          <div class="field">
+            <label for="registerEmail">邮箱</label>
+            <input class="input" id="registerEmail" name="registerEmail" type="email" autocomplete="email" placeholder="请输入可找回密码的邮箱" />
+          </div>
+          <div class="field">
+            <label for="registerFullName">姓名</label>
+            <input class="input" id="registerFullName" name="registerFullName" type="text" autocomplete="name" placeholder="请输入真实姓名（选填）" />
+          </div>
+          <div class="field">
+            <label for="registerCompany">单位/公司</label>
+            <input class="input" id="registerCompany" name="registerCompany" type="text" placeholder="请输入单位或公司（选填）" />
+          </div>
+          <div class="field">
+            <label for="registerPhone">手机号</label>
+            <input class="input" id="registerPhone" name="registerPhone" type="text" autocomplete="tel" placeholder="请输入手机号（选填）" />
+          </div>
+          <div class="field">
+            <label for="registerPassword">密码</label>
+            <input class="input" id="registerPassword" name="registerPassword" type="password" autocomplete="new-password" placeholder="至少 10 位，含大小写字母和数字" />
+          </div>
+          <div class="field">
+            <label for="registerPasswordConfirm">确认密码</label>
+            <input class="input" id="registerPasswordConfirm" name="registerPasswordConfirm" type="password" autocomplete="new-password" placeholder="请再次输入密码" />
+          </div>
+          <button class="submit" type="submit">注册</button>
+          <div id="registerError" class="error" aria-live="polite"></div>
+        </form>
+        <p class="security-note">注册完成后，订单、任务与交付数据将按账号独立隔离。</p>
+        <div class="extra">已有账号？<a href="./login.html">返回登录</a></div>
+      </div>
+    </section>
+  </main>
+  <script src="/runtime-config.js"></script>
+  <script src="../js/api-config.js"></script>
+  <script src="../js/auth-store.js"></script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="./register.js"></script>
+</body>
+</html>

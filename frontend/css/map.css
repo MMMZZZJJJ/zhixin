@@ -1,0 +1,15 @@
+/* 地图相关样式 */
+
+/* 地图容器 */
+#map { 
+    flex: 1; 
+    border-right: 1px solid #1b263b; 
+}
+
+/* 移动端地图适配 */
+@media (max-width: 800px) {
+    #map { 
+        height: 50%; 
+        order: 1; 
+    }
+}

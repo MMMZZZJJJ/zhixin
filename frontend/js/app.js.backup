@@ -1,0 +1,585 @@
+let map, marker;
+
+// 初始化地图
+function init() {
+    // 使用高德地图瓦片 (还原原站视觉)
+    // 注意：高德瓦片在中国境内有偏移，但作为复刻版，我们保持与原站一致的视觉体验
+    map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([39.914885, 116.403874], 10);
+
+    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+        subdomains: ['1', '2', '3', '4'],
+        maxZoom: 18
+    }).addTo(map);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // 地图点击事件
+    map.on('click', function(e) {
+        updateData(e.latlng.lat, e.latlng.lng);
+    });
+}
+
+// 更新数据逻辑
+async function updateData(lat, lng) {
+    lat = parseFloat(lat).toFixed(6);
+    lng = parseFloat(lng).toFixed(6);
+
+    // 1. 更新输入框
+    document.getElementById('lat_input').value = lat;
+    document.getElementById('lng_input').value = lng;
+
+    // 2. 更新标记
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    map.panTo([lat, lng]);
+
+    // 3. 填充表格基础信息
+    document.getElementById('res_pos').innerText = `${lng}, ${lat}`;
+    document.getElementById('res_deg').innerText = `${lng}°, ${lat}°`;
+    document.getElementById('res_dms').innerText = `${toDMS(lng, 'lng')}, ${toDMS(lat, 'lat')}`;
+
+    // 4. 逆地理编码查询 (中文)
+    document.getElementById('res_country').innerText = "查询中...";
+    document.getElementById('res_addr').innerText = "正在获取详细地址...";
+
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=zh-CN`);
+        const data = await response.json();
+        
+        if (data && data.address) {
+            const country = data.address.country || "未知";
+            const fullAddr = data.display_name || "未知位置";
+            document.getElementById('res_country').innerText = country;
+            document.getElementById('res_addr').innerText = fullAddr;
+        } else {
+            document.getElementById('res_country').innerText = "公海/无人区";
+            document.getElementById('res_addr').innerText = "无法获取详细地址";
+        }
+    } catch (e) {
+        document.getElementById('res_country').innerText = "查询失败";
+        document.getElementById('res_addr').innerText = "网络异常，请稍后再试";
+    }
+}
+
+// 度分秒转换逻辑
+function toDMS(val, type) {
+    const abs = Math.abs(val);
+    const d = Math.floor(abs);
+    const m = Math.floor((abs - d) * 60);
+    const s = ((abs - d - m / 60) * 3600).toFixed(2);
+    let suffix = "";
+    if (type === 'lng') {
+        suffix = val >= 0 ? "东经E" : "西经W";
+    } else {
+        suffix = val >= 0 ? "北纬N" : "南纬S";
+    }
+    return `${d}°${m}′${s}″ ${suffix}`;
+}
+
+// 手动输入定位
+function manualLocate() {
+    const lat = document.getElementById('lat_input').value;
+    const lng = document.getElementById('lng_input').value;
+    if (lat && lng) {
+        map.setZoom(15);
+        updateData(lat, lng);
+    } else {
+        alert("请输入完整的经纬度数值");
+    }
+}
+
+// 重置
+function resetAll() {
+    document.getElementById('lat_input').value = '';
+    document.getElementById('lng_input').value = '';
+    document.getElementById('res_pos').innerText = '点击地图获取';
+    document.getElementById('res_country').innerText = '--';
+    document.getElementById('res_addr').innerText = '--';
+    document.getElementById('res_deg').innerText = '--';
+    document.getElementById('res_dms').innerText = '--';
+    if (marker) map.removeLayer(marker);
+    map.setView([39.914885, 116.403874], 10);
+}
+
+// 下单 - 调用席位时间预测接口
+async function placeOrder() {
+    const lat = document.getElementById('lat_input').value;
+    const lng = document.getElementById('lng_input').value;
+    const address = document.getElementById('res_addr').innerText;
+    
+    if (!lat || !lng || address === '--' || address === '点击地图获取') {
+        alert("请先选择或输入有效的经纬度位置");
+        return;
+    }
+    
+    // 精度检查和警告
+    const lngPrecision = getDecimalPlaces(lng);
+    const latPrecision = getDecimalPlaces(lat);
+    
+    if (lngPrecision < 4 || latPrecision < 4) {
+        const confirmed = confirm(
+            `⚠️ 精度警告\n\n` +
+            `当前经纬度精度较低：\n` +
+            `经度：${lngPrecision}位小数（约${getPrecisionDistance(lngPrecision)}误差）\n` +
+            `纬度：${latPrecision}位小数（约${getPrecisionDistance(latPrecision)}误差）\n\n` +
+            `建议使用至少4位小数（约11米精度）\n` +
+            `推荐使用6位小数（约0.11米精度）\n\n` +
+            `是否继续查询？`
+        );
+        if (!confirmed) return;
+    }
+    
+    // 显示加载状态
+    const btnOrder = document.querySelector('.btn-order');
+    const originalText = btnOrder.innerText;
+    btnOrder.innerText = '预测中...';
+    btnOrder.disabled = true;
+    
+    try {
+        // 调用席位时间预测接口
+        const apiUrl = `http://103.38.224.91:9069?Longitude=${lng}&Latitude=${lat}`;
+        console.log("请求接口：", apiUrl);
+        console.log("经度精度：", lngPrecision, "位小数");
+        console.log("纬度精度：", latPrecision, "位小数");
+        
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("接口返回数据：", data);
+        
+        // 解析返回数据并显示
+        if (data && data.length > 0) {
+            showResultModal(data, lng, lat, address);
+        } else {
+            showNoResultModal();
+        }
+        
+    } catch (error) {
+        console.error("接口调用失败：", error);
+        alert(`预测失败：${error.message}\n\n可能原因：\n1. 网络连接问题\n2. 接口服务未启动\n3. 跨域限制（需要后端配置CORS）`);
+    } finally {
+        // 恢复按钮状态
+        btnOrder.innerText = originalText;
+        btnOrder.disabled = false;
+    }
+}
+
+// 获取小数位数
+function getDecimalPlaces(num) {
+    const str = String(num);
+    if (str.indexOf('.') === -1) return 0;
+    return str.split('.')[1].length;
+}
+
+// 获取精度对应的距离描述
+function getPrecisionDistance(places) {
+    const distances = {
+        0: '约111公里',
+        1: '约11.1公里',
+        2: '约1.11公里',
+        3: '约111米',
+        4: '约11.1米',
+        5: '约1.11米',
+        6: '约0.11米'
+    };
+    return distances[places] || '未知';
+}
+
+// 模拟测试弹窗
+function testModal() {
+    // 模拟接口返回的数据
+    const mockData = [
+        {
+            "01-SourceName": "高分一号GF-1",
+            "02-Longitude": 116.403874,
+            "03-Latitude": 39.914885,
+            "04-CentralityTime": "2024-03-15 10:30:25",
+            "05-ImagingMode": ["全色", "多光谱", "高分辨率"],
+            "06-RollPosition": "左侧15度"
+        },
+        {
+            "01-SourceName": "高分二号GF-2",
+            "02-Longitude": 116.403874,
+            "03-Latitude": 39.914885,
+            "04-CentralityTime": "2024-03-15 14:20:18",
+            "05-ImagingMode": ["全色"],
+            "06-RollPosition": "右侧10度"
+        },
+        {
+            "01-SourceName": "资源三号ZY-3",
+            "02-Longitude": 116.403874,
+            "03-Latitude": 39.914885,
+            "04-CentralityTime": "2024-03-16 09:15:42",
+            "05-ImagingMode": ["立体测绘", "多光谱"],
+            "06-RollPosition": "正视0度"
+        }
+    ];
+    
+    const lng = "116.403874";
+    const lat = "39.914885";
+    const address = "中国北京市东城区天安门广场";
+    
+    showResultModal(mockData, lng, lat, address);
+}
+
+// 显示结果弹窗
+function showResultModal(data, lng, lat, address) {
+    const modalBody = document.getElementById('modalBody');
+    
+    // 构建基本信息
+    let html = `
+        <div class="result-info">
+            <p><strong>经纬度：</strong>${lng}, ${lat}</p>
+            <p><strong>地址：</strong>${address}</p>
+            <p><strong>席位数量：</strong>共找到 ${data.length} 个可用席位</p>
+        </div>
+    `;
+    
+    // 构建每个席位卡片
+    data.forEach((item, index) => {
+        const imagingMode = item['05-ImagingMode'] 
+            ? (Array.isArray(item['05-ImagingMode']) ? item['05-ImagingMode'].join('、') : item['05-ImagingMode'])
+            : '未知';
+            
+        html += `
+            <div class="seat-card">
+                <h3>🛰️ 席位 ${index + 1}</h3>
+                <div class="info-row">
+                    <span class="info-label">卫星名称：</span>
+                    <span class="info-value">${item['01-SourceName'] || '未知'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">中心时间：</span>
+                    <span class="info-value highlight">${item['04-CentralityTime'] || '未知'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">成像模式：</span>
+                    <span class="info-value">${imagingMode}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">侧摆位置：</span>
+                    <span class="info-value">${item['06-RollPosition'] || '未知'}</span>
+                </div>
+                <div class="task-submit-box">
+                    <button class="btn btn-submit-task" data-index="${index}">
+                        🚀 提交成像任务
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    modalBody.innerHTML = html;
+    document.getElementById('resultModal').style.display = 'block';
+    
+    // 等待DOM更新后再绑定事件
+    setTimeout(() => {
+        // 为所有提交按钮绑定事件
+        const submitButtons = document.querySelectorAll('.btn-submit-task');
+        console.log('找到提交按钮数量：', submitButtons.length);
+        console.log('按钮元素：', submitButtons);
+        
+        submitButtons.forEach((button, index) => {
+            console.log(`绑定第 ${index + 1} 个按钮的点击事件`);
+            
+            // 测试按钮是否可点击
+            button.onclick = function(e) {
+                console.log(`点击了第 ${index + 1} 个按钮`);
+                console.log('事件对象：', e);
+                console.log('按钮数据：', data[index]);
+                submitTask(data[index]);
+            };
+            
+            // 添加鼠标悬停测试
+            button.onmouseenter = function() {
+                console.log(`鼠标进入第 ${index + 1} 个按钮`);
+            };
+        });
+    }, 100);
+}
+
+// 显示无结果弹窗
+function showNoResultModal() {
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <div class="no-result">
+            <div class="no-result-icon">🔍</div>
+            <p style="font-size: 16px; color: #666;">未找到可用的席位时间</p>
+            <p style="font-size: 14px; color: #999; margin-top: 10px;">请尝试选择其他位置</p>
+        </div>
+    `;
+    document.getElementById('resultModal').style.display = 'block';
+}
+
+// 关闭弹窗
+function closeModal() {
+    document.getElementById('resultModal').style.display = 'none';
+}
+
+// 点击弹窗外部关闭
+window.onclick = function(event) {
+    const modal = document.getElementById('resultModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+
+// 提交成像任务
+async function submitTask(seatData) {
+    // 获取数据
+    const lng = seatData['02-Longitude'];
+    const lat = seatData['03-Latitude'];
+    const centralityTime = seatData['04-CentralityTime'];
+    
+    // 处理成像模式（取第一个）
+    let imagingMode = '';
+    if (Array.isArray(seatData['05-ImagingMode'])) {
+        imagingMode = seatData['05-ImagingMode'][0];
+    } else {
+        imagingMode = seatData['05-ImagingMode'] || '未知';
+    }
+    
+    // 确认对话框
+    const confirmed = confirm(
+        `确认提交成像任务？\n\n` +
+        `卫星名称：${seatData['01-SourceName']}\n` +
+        `成像时间：${centralityTime}\n` +
+        `成像模式：${imagingMode}\n` +
+        `目标位置：${lng}, ${lat}\n\n` +
+        `点击"确定"提交任务`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+        // 构建请求URL
+        const apiUrl = `http://103.38.224.91:9608?` +
+            `Longitude=${lng}&` +
+            `Latitude=${lat}&` +
+            `CentralityTime=${encodeURIComponent(centralityTime)}&` +
+            `ImagingMode=${encodeURIComponent(imagingMode)}`;
+        
+        console.log("提交任务接口：", apiUrl);
+        console.log("提交参数：", {
+            Longitude: lng,
+            Latitude: lat,
+            CentralityTime: centralityTime,
+            ImagingMode: imagingMode
+        });
+        
+        // 调用接口
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("任务提交结果：", result);
+        
+        // 检查结果
+        if (result['04-ConditionCode'] === 1) {
+            // 成功
+            alert(
+                `✅ 任务提交成功！\n\n` +
+                `卫星名称：${result['01-SourceName']}\n` +
+                `成像时间：${result['02-CentralityTime']}\n` +
+                `成像模式：${getModeText(result['03-ImagingMode'])}\n` +
+                `任务状态：规划成功\n\n` +
+                `请等待卫星拍摄，稍后可查看成像结果。`
+            );
+        } else {
+            // 失败
+            alert(
+                `❌ 任务规划失败\n\n` +
+                `可能原因：\n` +
+                `1. 该时间段已被占用\n` +
+                `2. 卫星资源不足\n` +
+                `3. 天气条件不满足\n` +
+                `4. 目标位置超出卫星覆盖范围\n\n` +
+                `建议选择其他席位重试。`
+            );
+        }
+        
+    } catch (error) {
+        console.error("任务提交失败：", error);
+        alert(
+            `任务提交失败：${error.message}\n\n` +
+            `可能原因：\n` +
+            `1. 网络连接问题\n` +
+            `2. 接口服务未启动（9608端口）\n` +
+            `3. 跨域限制（需要后端配置CORS）\n\n` +
+            `请检查网络连接或联系技术支持。`
+        );
+    }
+}
+
+// 成像模式代码转文字
+function getModeText(code) {
+    const modes = {
+        '1': '条带模式',
+        '2': '滑聚模式',
+        '3': '聚束模式'
+    };
+    return modes[String(code)] || '未知模式';
+}
+
+window.onload = init;
+
+// 提交成像任务
+async function submitTask(seatData) {
+    console.log('submitTask 函数被调用');
+    console.log('接收到的数据：', seatData);
+    
+    // 获取数据
+    const lng = seatData['02-Longitude'];
+    const lat = seatData['03-Latitude'];
+    const centralityTime = seatData['04-CentralityTime'];
+    
+    // 处理成像模式（取第一个）
+    let imagingMode = '';
+    if (Array.isArray(seatData['05-ImagingMode'])) {
+        imagingMode = seatData['05-ImagingMode'][0];
+    } else {
+        imagingMode = seatData['05-ImagingMode'] || '未知';
+    }
+    
+    // 显示自定义确认弹窗
+    showConfirmModal(seatData, lng, lat, centralityTime, imagingMode);
+}
+
+// 显示确认弹窗
+function showConfirmModal(seatData, lng, lat, centralityTime, imagingMode) {
+    const confirmModalBody = document.getElementById('confirmModalBody');
+    
+    const html = `
+        <div class="confirm-info-item">
+            <span class="confirm-info-label">卫星名称：</span>
+            <span class="confirm-info-value">${seatData['01-SourceName']}</span>
+        </div>
+        <div class="confirm-info-item">
+            <span class="confirm-info-label">成像时间：</span>
+            <span class="confirm-info-value highlight">${centralityTime}</span>
+        </div>
+        <div class="confirm-info-item">
+            <span class="confirm-info-label">成像模式：</span>
+            <span class="confirm-info-value">${imagingMode}</span>
+        </div>
+        <div class="confirm-info-item">
+            <span class="confirm-info-label">目标位置：</span>
+            <span class="confirm-info-value">${lng}, ${lat}</span>
+        </div>
+        <div class="confirm-warning">
+            <p>⚠️ 提示：</p>
+            <p>• 任务提交后将调用卫星资源</p>
+            <p>• 请确认信息无误后再提交</p>
+        </div>
+    `;
+    
+    confirmModalBody.innerHTML = html;
+    document.getElementById('confirmModal').style.display = 'block';
+    
+    // 绑定确定按钮事件
+    document.getElementById('confirmSubmitBtn').onclick = function() {
+        closeConfirmModal();
+        doSubmitTask(lng, lat, centralityTime, imagingMode, seatData);
+    };
+}
+
+// 关闭确认弹窗
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+// 执行任务提交
+async function doSubmitTask(lng, lat, centralityTime, imagingMode, seatData) {
+    try {
+        // 构建请求URL
+        const apiUrl = `http://103.38.224.91:9608?` +
+            `Longitude=${lng}&` +
+            `Latitude=${lat}&` +
+            `CentralityTime=${encodeURIComponent(centralityTime)}&` +
+            `ImagingMode=${encodeURIComponent(imagingMode)}`;
+        
+        console.log("提交任务接口：", apiUrl);
+        console.log("提交参数：", {
+            Longitude: lng,
+            Latitude: lat,
+            CentralityTime: centralityTime,
+            ImagingMode: imagingMode
+        });
+        
+        // 调用接口
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("任务提交结果：", result);
+        
+        // 检查结果
+        if (result['04-ConditionCode'] === 1) {
+            // 成功
+            alert(
+                `✅ 任务提交成功！\n\n` +
+                `卫星名称：${result['01-SourceName']}\n` +
+                `成像时间：${result['02-CentralityTime']}\n` +
+                `成像模式：${getModeText(result['03-ImagingMode'])}\n` +
+                `任务状态：规划成功\n\n` +
+                `请等待卫星拍摄，稍后可查看成像结果。`
+            );
+        } else {
+            // 失败
+            alert(
+                `❌ 任务规划失败\n\n` +
+                `可能原因：\n` +
+                `1. 该时间段已被占用\n` +
+                `2. 卫星资源不足\n` +
+                `3. 天气条件不满足\n` +
+                `4. 目标位置超出卫星覆盖范围\n\n` +
+                `建议选择其他席位重试。`
+            );
+        }
+        
+    } catch (error) {
+        console.error("任务提交失败：", error);
+        alert(
+            `任务提交失败：${error.message}\n\n` +
+            `可能原因：\n` +
+            `1. 网络连接问题\n` +
+            `2. 接口服务未启动（9608端口）\n` +
+            `3. 跨域限制（需要后端配置CORS）\n\n` +
+            `请检查网络连接或联系技术支持。`
+        );
+    }
+}
+
+// 成像模式代码转文字
+function getModeText(code) {
+    const modes = {
+        '1': '条带模式',
+        '2': '滑聚模式',
+        '3': '聚束模式'
+    };
+    return modes[String(code)] || '未知模式';
+}
+
+window.onload = init;

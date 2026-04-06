@@ -1,0 +1,997 @@
+/* 还原原站样式 */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body { 
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; 
+    background: #0a0e27; 
+    color: #e0e0e0; 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+/* 头部 - 航天风格 */
+.header { 
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+    border-bottom: 2px solid #00d4ff;
+    padding: 15px 20px;
+    box-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
+}
+
+.header h1 { 
+    font-size: 22px; 
+    background: linear-gradient(90deg, #00d4ff 0%, #00ffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* 主体布局 */
+.main-container { 
+    flex: 1; 
+    display: flex; 
+    overflow: hidden; 
+}
+
+/* 左侧地图 */
+#map { 
+    flex: 1; 
+    border-right: 1px solid #1b263b; 
+}
+
+/* 右侧面板 - 航天风格 */
+.side-panel { 
+    width: 360px; 
+    background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%);
+    padding: 20px; 
+    overflow-y: auto; 
+    box-shadow: -2px 0 15px rgba(0, 0, 0, 0.5);
+    border-left: 1px solid #00d4ff;
+}
+
+.form-group { 
+    margin-bottom: 15px; 
+}
+
+.form-group label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-size: 14px; 
+    color: #00d4ff;
+    font-weight: 500;
+}
+
+.form-group input { 
+    width: 100%; 
+    height: 38px; 
+    padding: 0 10px; 
+    border: 1px solid #2a4a6a;
+    border-radius: 4px;
+    outline: none; 
+    font-size: 14px;
+    background: rgba(27, 38, 59, 0.6);
+    color: #e0e0e0;
+    transition: all 0.3s;
+}
+
+.form-group input:focus { 
+    border-color: #00d4ff;
+    background: rgba(27, 38, 59, 0.9);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+/* 按钮样式 - 航天科技风 */
+.btn-box { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 25px; 
+}
+
+.btn { 
+    flex: 1; 
+    height: 40px; 
+    border: none; 
+    border-radius: 4px;
+    color: #fff; 
+    cursor: pointer; 
+    font-size: 14px; 
+    font-weight: bold;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-locate { 
+    background: linear-gradient(135deg, #0066cc 0%, #0099ff 100%);
+    box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+}
+
+.btn-locate:hover { 
+    box-shadow: 0 6px 20px rgba(0, 153, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-clear { 
+    background: linear-gradient(135deg, #cc3300 0%, #ff4444 100%);
+    box-shadow: 0 4px 15px rgba(204, 51, 0, 0.4);
+}
+
+.btn-clear:hover { 
+    box-shadow: 0 6px 20px rgba(255, 68, 68, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-order { 
+    background: linear-gradient(135deg, #00cc66 0%, #00ff88 100%);
+    box-shadow: 0 4px 15px rgba(0, 204, 102, 0.4);
+}
+
+.btn-order:hover { 
+    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-test { 
+    background: linear-gradient(135deg, #9933cc 0%, #cc66ff 100%);
+    box-shadow: 0 4px 15px rgba(153, 51, 204, 0.4);
+}
+
+.btn-test:hover { 
+    box-shadow: 0 6px 20px rgba(204, 102, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+/* 结果表格样式 - 航天风格 */
+.result-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 10px; 
+    background: rgba(27, 38, 59, 0.4);
+    border: 1px solid #2a4a6a;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.result-table td { 
+    border: 1px solid #2a4a6a;
+    padding: 12px 10px; 
+    font-size: 13px; 
+    line-height: 1.6; 
+}
+
+.td-label { 
+    background: rgba(13, 27, 42, 0.6);
+    color: #00d4ff;
+    width: 90px; 
+    text-align: right;
+    font-weight: 500;
+}
+
+.td-value { 
+    color: #e0e0e0;
+    font-weight: 500; 
+    word-break: break-all; 
+}
+
+.highlight { 
+    color: #00ff88;
+    font-weight: bold; 
+}
+
+/* 自定义弹窗样式 - 高级版 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 150, 136, 0.1) 0%, rgba(33, 150, 243, 0.1) 100%),
+                rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+    margin: 3% auto;
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(100px) scale(0.95); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateY(0) scale(1); 
+        opacity: 1; 
+    }
+}
+
+.modal-header {
+    padding: 28px 32px;
+    background: linear-gradient(135deg, #009688 0%, #00796B 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+}
+
+.close {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 32px;
+    font-weight: 300;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.3s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+}
+
+.close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 32px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* 自定义滚动条 */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #009688 0%, #00796B 100%);
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #00796B 0%, #004D40 100%);
+}
+
+.result-info {
+    background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+    padding: 24px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    border-left: 5px solid #009688;
+    box-shadow: 0 4px 12px rgba(0, 150, 136, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.result-info::before {
+    content: '📍';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 48px;
+    opacity: 0.2;
+}
+
+.result-info p {
+    margin: 8px 0;
+    color: #004D40;
+    font-size: 15px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+.result-info strong {
+    color: #00695C;
+    font-weight: 600;
+}
+
+.seat-card {
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.seat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #009688 0%, #2196F3 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 150, 136, 0.2);
+    border-color: #009688;
+}
+
+.seat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.seat-card h3 {
+    color: #009688;
+    font-size: 18px;
+    margin: 0 0 18px 0;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.seat-card .info-row {
+    display: flex;
+    margin: 12px 0;
+    font-size: 15px;
+    align-items: flex-start;
+}
+
+.seat-card .info-label {
+    color: #757575;
+    width: 100px;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.seat-card .info-value {
+    color: #424242;
+    font-weight: 500;
+    flex: 1;
+    line-height: 1.6;
+}
+
+.seat-card .info-value.highlight {
+    color: #2196F3;
+    font-weight: 700;
+    font-size: 16px;
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.no-result {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.no-result-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+.modal-footer {
+    padding: 20px 32px;
+    border-top: 1px solid #e0e0e0;
+    text-align: right;
+    background: #fafafa;
+}
+
+.modal-footer .btn {
+    width: auto;
+    padding: 0 40px;
+    height: 44px;
+    font-size: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 150, 136, 0.3);
+    transition: all 0.3s;
+}
+
+.modal-footer .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 150, 136, 0.4);
+}
+
+/* 移动端适配 */
+@media (max-width: 800px) {
+    .main-container { 
+        flex-direction: column; 
+    }
+    
+    .side-panel { 
+        width: 100%; 
+        height: 50%; 
+        order: 2; 
+    }
+    
+    #map { 
+        height: 50%; 
+        order: 1; 
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        max-height: 90vh;
+        border-radius: 12px;
+    }
+    
+    .modal-header {
+        padding: 20px 24px;
+    }
+    
+    .modal-header h2 {
+        font-size: 20px;
+    }
+    
+    .modal-body {
+        padding: 24px 20px;
+    }
+    
+    .seat-card {
+        padding: 20px;
+    }
+    
+    .seat-card .info-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .seat-card .info-label {
+        margin-bottom: 4px;
+        font-size: 13px;
+    }
+    
+    .result-info::before {
+        font-size: 32px;
+        right: 10px;
+    }
+}
+
+
+/* 自定义弹窗样式 - 航天科技风格 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.1) 0%, rgba(10, 14, 39, 0.95) 100%),
+                rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%);
+    margin: 3% auto;
+    width: 90%;
+    max-width: 850px;
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.4),
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                inset 0 0 0 1px rgba(0, 212, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(100px) scale(0.9); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateY(0) scale(1); 
+        opacity: 1; 
+    }
+}
+
+.modal-header {
+    padding: 28px 32px;
+    background: linear-gradient(135deg, #0a1929 0%, #1e3a5f 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 2px solid #00d4ff;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.15) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.modal-header::after {
+    content: '🛰️';
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 32px;
+    opacity: 0.3;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(90deg, #00d4ff 0%, #00ffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.close {
+    color: #00d4ff;
+    font-size: 32px;
+    font-weight: 300;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.3s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+    border: 1px solid transparent;
+}
+
+.close:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: #00d4ff;
+    transform: rotate(90deg);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+}
+
+.modal-body {
+    padding: 32px;
+    overflow-y: auto;
+    flex: 1;
+    background: linear-gradient(180deg, rgba(13, 27, 42, 0.6) 0%, rgba(27, 38, 59, 0.6) 100%);
+}
+
+/* 自定义滚动条 - 航天风格 */
+.modal-body::-webkit-scrollbar {
+    width: 10px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(13, 27, 42, 0.8);
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00d4ff 0%, #0099cc 100%);
+    border-radius: 10px;
+    border: 2px solid rgba(13, 27, 42, 0.8);
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00ffff 0%, #00d4ff 100%);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.result-info {
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.2) 0%, rgba(0, 153, 255, 0.1) 100%);
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    border-left: 4px solid #00d4ff;
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2),
+                inset 0 0 20px rgba(0, 212, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.result-info::before {
+    content: '🌍';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 48px;
+    opacity: 0.15;
+}
+
+.result-info p {
+    margin: 8px 0;
+    color: #e0e0e0;
+    font-size: 15px;
+    line-height: 1.8;
+    position: relative;
+    z-index: 1;
+}
+
+.result-info strong {
+    color: #00d4ff;
+    font-weight: 600;
+}
+
+.seat-card {
+    background: linear-gradient(135deg, rgba(13, 27, 42, 0.8) 0%, rgba(27, 38, 59, 0.8) 100%);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.seat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #00d4ff 0%, #00ffff 50%, #00d4ff 100%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.seat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3),
+                0 0 30px rgba(0, 212, 255, 0.2);
+    border-color: #00d4ff;
+}
+
+.seat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.seat-card:hover::after {
+    opacity: 1;
+}
+
+.seat-card h3 {
+    color: #00d4ff;
+    font-size: 18px;
+    margin: 0 0 18px 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+}
+
+.seat-card .info-row {
+    display: flex;
+    margin: 12px 0;
+    font-size: 15px;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+}
+
+.seat-card .info-label {
+    color: #00d4ff;
+    width: 100px;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.seat-card .info-value {
+    color: #e0e0e0;
+    font-weight: 500;
+    flex: 1;
+    line-height: 1.6;
+}
+
+.seat-card .info-value.highlight {
+    color: #00ffff;
+    font-weight: 700;
+    font-size: 16px;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 255, 255, 0.1) 100%);
+    padding: 8px 14px;
+    border-radius: 6px;
+    display: inline-block;
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.no-result {
+    text-align: center;
+    padding: 60px 20px;
+    color: #00d4ff;
+}
+
+.no-result-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+.modal-footer {
+    padding: 20px 32px;
+    border-top: 1px solid rgba(0, 212, 255, 0.3);
+    text-align: right;
+    background: linear-gradient(180deg, rgba(13, 27, 42, 0.8) 0%, rgba(10, 27, 42, 0.9) 100%);
+}
+
+.modal-footer .btn {
+    width: auto;
+    padding: 0 40px;
+    height: 44px;
+    font-size: 15px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #0066cc 0%, #0099ff 100%);
+    box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+    transition: all 0.3s;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.modal-footer .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 153, 255, 0.6);
+    border-color: #00d4ff;
+}
+
+/* 确认弹窗样式 */
+.confirm-modal-content {
+    max-width: 500px;
+}
+
+.confirm-modal-body {
+    padding: 30px;
+    background: linear-gradient(180deg, rgba(13, 27, 42, 0.6) 0%, rgba(27, 38, 59, 0.6) 100%);
+}
+
+.confirm-info-item {
+    display: flex;
+    margin: 15px 0;
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+.confirm-info-label {
+    color: #00d4ff;
+    width: 100px;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.confirm-info-value {
+    color: #e0e0e0;
+    font-weight: 500;
+    flex: 1;
+}
+
+.confirm-info-value.highlight {
+    color: #00ffff;
+    font-weight: 700;
+}
+
+.confirm-warning {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255, 107, 0, 0.1);
+    border-left: 4px solid #ff6b00;
+    border-radius: 4px;
+}
+
+.confirm-warning p {
+    color: #ff9500;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 5px 0;
+}
+
+.btn-cancel {
+    background: linear-gradient(135deg, #666 0%, #888 100%);
+    border: 1px solid rgba(136, 136, 136, 0.3);
+}
+
+.btn-cancel:hover {
+    background: linear-gradient(135deg, #888 0%, #aaa 100%);
+    box-shadow: 0 6px 20px rgba(136, 136, 136, 0.6);
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
+    border: 1px solid rgba(255, 107, 0, 0.3);
+}
+
+.btn-confirm:hover {
+    background: linear-gradient(135deg, #ff9500 0%, #ffb800 100%);
+    box-shadow: 0 6px 20px rgba(255, 149, 0, 0.6);
+}
+
+/* 提交任务按钮区域 */
+.task-submit-box {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 212, 255, 0.2);
+    position: relative;
+    z-index: 10;
+}
+
+/* 提交任务按钮样式 */
+.btn-submit-task {
+    width: 100%;
+    height: 44px;
+    background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
+    border: 1px solid rgba(255, 107, 0, 0.4);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+    pointer-events: auto;
+    z-index: 100;
+}
+
+.btn-submit-task::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    pointer-events: none;
+}
+
+.btn-submit-task:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-submit-task:hover {
+    background: linear-gradient(135deg, #ff9500 0%, #ffb800 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 149, 0, 0.6);
+    border-color: #ff9500;
+}
+
+.btn-submit-task:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.5);
+}

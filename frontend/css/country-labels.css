@@ -1,0 +1,27 @@
+/* 国家标注样式 */
+
+.country-label {
+    background: none;
+    border: none;
+}
+
+.country-label-text {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    text-shadow: 
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0 0 3px #fff;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    text-align: center;
+}
+
+/* 根据缩放级别调整字体大小 */
+.leaflet-zoom-animated .country-label-text {
+    transition: font-size 0.2s;
+}
