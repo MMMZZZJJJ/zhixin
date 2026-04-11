@@ -10,6 +10,9 @@ const submitButton = form ? form.querySelector('button[type="submit"]') : null;
 const faceMap = new Map();
 const eyeMap = new Map();
 let gazeMode = 'pointer';
+let motionFrameId = 0;
+let pendingPointerEvent = null;
+const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 characters.forEach((character) => {
     faceMap.set(character, character.querySelector('.face'));
@@ -86,12 +89,31 @@ const resetMotion = () => {
     });
 };
 
-visual.addEventListener('pointermove', (event) => {
-    if (gazeMode !== 'pointer') return;
-    updateMotion(event.clientX, event.clientY);
-});
+const flushPointerMotion = () => {
+    motionFrameId = 0;
+    if (!pendingPointerEvent || gazeMode !== 'pointer') {
+        return;
+    }
+    updateMotion(pendingPointerEvent.clientX, pendingPointerEvent.clientY);
+    pendingPointerEvent = null;
+};
+
+const schedulePointerMotion = (event) => {
+    if (prefersReducedMotion || gazeMode !== 'pointer') return;
+    pendingPointerEvent = event;
+    if (!motionFrameId) {
+        motionFrameId = window.requestAnimationFrame(flushPointerMotion);
+    }
+};
+
+visual.addEventListener('pointermove', schedulePointerMotion, { passive: true });
 
 visual.addEventListener('pointerleave', () => {
+    pendingPointerEvent = null;
+    if (motionFrameId) {
+        window.cancelAnimationFrame(motionFrameId);
+        motionFrameId = 0;
+    }
     if (gazeMode === 'pointer') resetMotion();
 });
 
@@ -127,6 +149,9 @@ password.addEventListener('blur', () => {
 });
 
 window.addEventListener('load', async () => {
+    if (prefersReducedMotion) {
+        resetMotion();
+    }
     const params = new URLSearchParams(window.location.search);
     const presetUsername = params.get('username');
     if (presetUsername) {

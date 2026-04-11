@@ -54,6 +54,19 @@ function send(res, status, body, contentType = 'text/plain; charset=utf-8') {
     res.end(body);
 }
 
+function getStaticCacheControl(ext) {
+    if (ext === '.html') {
+        return 'no-store';
+    }
+    if (ext === '.js' || ext === '.css') {
+        return 'public, max-age=3600';
+    }
+    if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico'].includes(ext)) {
+        return 'public, max-age=86400';
+    }
+    return 'no-store';
+}
+
 function getSafeFilePath(urlPath) {
     const cleanPath = decodeURIComponent(urlPath.split('?')[0]);
     const resolvedPath = path.resolve(ROOT_DIR, `.${cleanPath}`);
@@ -98,7 +111,7 @@ function serveStatic(req, res, parsedUrl) {
             const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
             res.writeHead(200, {
                 'Content-Type': mimeType,
-                'Cache-Control': 'no-store'
+                'Cache-Control': getStaticCacheControl(ext)
             });
             res.end(data);
         });

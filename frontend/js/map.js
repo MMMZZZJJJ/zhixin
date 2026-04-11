@@ -1,24 +1,103 @@
 /* 地图功能模块 */
 
+const MAP_HOT_CITY_NAMES = ['全国', '北京', '上海', '广州', '深圳', '杭州', '南京', '武汉', '成都', '西安', '银川'];
+const MAP_PROVINCE_CITY_GROUPS = [
+    { province: '直辖市', cities: ['北京', '天津', '上海', '重庆'] },
+    { province: '广东', cities: ['广州', '深圳'] },
+    { province: '广西', cities: ['南宁'] },
+    { province: '贵州', cities: ['贵阳'] },
+    { province: '江苏', cities: ['南京'] },
+    { province: '浙江', cities: ['杭州'] },
+    { province: '山东', cities: ['济南', '青岛'] },
+    { province: '湖北', cities: ['武汉'] },
+    { province: '湖南', cities: ['长沙'] },
+    { province: '四川', cities: ['成都'] },
+    { province: '河南', cities: ['郑州'] },
+    { province: '河北', cities: ['石家庄'] },
+    { province: '陕西', cities: ['西安'] },
+    { province: '福建', cities: ['福州', '厦门'] },
+    { province: '辽宁', cities: ['沈阳', '大连'] },
+    { province: '吉林', cities: ['长春'] },
+    { province: '黑龙江', cities: ['哈尔滨'] },
+    { province: '云南', cities: ['昆明'] },
+    { province: '江西', cities: ['南昌'] },
+    { province: '安徽', cities: ['合肥'] },
+    { province: '山西', cities: ['太原'] },
+    { province: '甘肃', cities: ['兰州'] },
+    { province: '青海', cities: ['西宁'] },
+    { province: '内蒙古', cities: ['呼和浩特'] },
+    { province: '宁夏', cities: ['银川'] },
+    { province: '新疆', cities: ['乌鲁木齐'] },
+    { province: '西藏', cities: ['拉萨'] }
+];
+const MAP_CITY_INITIALS = ['全部', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'N', 'Q', 'S', 'T', 'W', 'X', 'Y', 'Z'];
+const MAP_CITY_INITIAL_MAP = {
+    '北京': 'B', '成都': 'C', '重庆': 'C', '长沙': 'C', '长春': 'C',
+    '大连': 'D', '福州': 'F', '广州': 'G', '贵阳': 'G',
+    '杭州': 'H', '合肥': 'H', '哈尔滨': 'H', '呼和浩特': 'H',
+    '济南': 'J', '昆明': 'K', '兰州': 'L', '拉萨': 'L',
+    '南京': 'N', '南宁': 'N', '南昌': 'N', '青岛': 'Q',
+    '上海': 'S', '深圳': 'S', '沈阳': 'S', '石家庄': 'S',
+    '天津': 'T', '太原': 'T', '武汉': 'W', '乌鲁木齐': 'W',
+    '西安': 'X', '厦门': 'X', '西宁': 'X', '银川': 'Y', '郑州': 'Z'
+};
+const MAP_CITY_FALLBACK_POINTS = {
+    '全国': { lat: 35.8617, lng: 104.1954, zoom: 4 },
+    '广东': { lat: 23.3417, lng: 113.4244, zoom: 7 },
+    '广西': { lat: 23.8298, lng: 108.7881, zoom: 7 },
+    '贵州': { lat: 26.5982, lng: 106.7074, zoom: 7 },
+    '江苏': { lat: 32.9711, lng: 119.455, zoom: 7 },
+    '浙江': { lat: 29.1832, lng: 120.0934, zoom: 7 },
+    '山东': { lat: 36.6683, lng: 117.0204, zoom: 7 },
+    '湖北': { lat: 30.9756, lng: 112.2707, zoom: 7 },
+    '湖南': { lat: 27.6104, lng: 111.7088, zoom: 7 },
+    '四川': { lat: 30.6171, lng: 102.7103, zoom: 7 },
+    '河南': { lat: 34.2904, lng: 113.3824, zoom: 7 },
+    '河北': { lat: 38.0371, lng: 114.5315, zoom: 7 },
+    '陕西': { lat: 35.3939, lng: 108.947, zoom: 7 },
+    '福建': { lat: 26.0998, lng: 118.2951, zoom: 7 },
+    '辽宁': { lat: 41.2956, lng: 122.6085, zoom: 7 },
+    '吉林': { lat: 43.8378, lng: 126.5494, zoom: 7 },
+    '黑龙江': { lat: 45.7421, lng: 126.6617, zoom: 6 },
+    '云南': { lat: 25.0458, lng: 102.7097, zoom: 7 },
+    '江西': { lat: 27.614, lng: 115.7221, zoom: 7 },
+    '安徽': { lat: 31.8612, lng: 117.2857, zoom: 7 },
+    '山西': { lat: 37.8735, lng: 112.5624, zoom: 7 },
+    '甘肃': { lat: 36.0594, lng: 103.8263, zoom: 6 },
+    '青海': { lat: 36.6209, lng: 101.7801, zoom: 6 },
+    '内蒙古': { lat: 40.8174, lng: 111.7652, zoom: 6 },
+    '宁夏': { lat: 37.2692, lng: 106.1655, zoom: 7 },
+    '新疆': { lat: 43.793, lng: 87.6271, zoom: 5 },
+    '西藏': { lat: 29.6475, lng: 91.1172, zoom: 6 }
+};
+let mapCityPanelState = { tab: 'province', filter: '', initial: '全部', current: '北京' };
+
 let map, marker;
 
 // 初始化地图
 function initMap() {
     map = L.map('map', {
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
+        zoomAnimation: false,
+        fadeAnimation: false,
+        markerZoomAnimation: false,
+        inertia: false
     }).setView([39.914885, 116.403874], 10);
 
     // 高德地图矢量底图
     L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
         subdomains: ['1', '2', '3', '4'],
-        maxZoom: 18
+        maxZoom: 18,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        keepBuffer: 1
     }).addTo(map);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     // 添加国家标注（如果 country-labels.js 已加载）
-    if (typeof addCountryLabels === 'function') {
+    if (window.ENABLE_COUNTRY_LABELS === true && typeof addCountryLabels === 'function') {
         addCountryLabels(map);
     }
 
@@ -36,9 +115,326 @@ function initMap() {
             }
         });
     }
+    initMapCitySelector();
 }
 
 // 更新数据逻辑
+function initMapCitySelector() {
+    const toolbar = document.getElementById('mapToolbar');
+    const searchInput = document.getElementById('map_search_input') || document.getElementById('addr_search');
+    const legacyInput = document.getElementById('addr_search');
+    const searchBtn = document.getElementById('mapSearchBtn');
+    const trigger = document.getElementById('mapCityTrigger');
+    const dropdown = document.getElementById('mapCityDropdown');
+    const closeBtn = document.getElementById('mapCityClose');
+    const filterInput = document.getElementById('mapCityFilterInput');
+
+    if (!toolbar || !searchInput || !trigger || !dropdown) {
+        return;
+    }
+
+    if (!mapCityPanelState.current) {
+        const currentLabel = document.getElementById('mapCityLabel');
+        mapCityPanelState.current = currentLabel ? String(currentLabel.textContent || '').trim() || '北京' : '北京';
+    }
+
+    syncMapSearchKeyword(legacyInput ? legacyInput.value : searchInput.value);
+    updateMapCityLabel();
+    renderMapCityDropdown();
+
+    if (toolbar.dataset.citySelectorReady === '1') {
+        return;
+    }
+    toolbar.dataset.citySelectorReady = '1';
+
+    searchInput.addEventListener('input', function() {
+        if (legacyInput) {
+            legacyInput.value = searchInput.value;
+        }
+    });
+
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            syncMapSearchKeyword(searchInput.value);
+            searchAddress();
+        }
+    });
+
+    if (legacyInput) {
+        legacyInput.addEventListener('input', function() {
+            if (document.activeElement !== searchInput) {
+                syncMapSearchKeyword(legacyInput.value);
+            }
+        });
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            syncMapSearchKeyword(searchInput.value);
+            searchAddress();
+        });
+    }
+
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            dropdown.classList.remove('show');
+        });
+    }
+
+    if (filterInput) {
+        filterInput.addEventListener('input', function() {
+            mapCityPanelState.filter = String(filterInput.value || '').trim();
+            renderMapCityDropdown();
+        });
+    }
+
+    document.querySelectorAll('[data-city-tab]').forEach(function(tabButton) {
+        tabButton.addEventListener('click', function() {
+            const nextTab = tabButton.getAttribute('data-city-tab') || 'province';
+            if (mapCityPanelState.tab === nextTab) {
+                return;
+            }
+            mapCityPanelState.tab = nextTab;
+            mapCityPanelState.initial = '全部';
+            renderMapCityDropdown();
+        });
+    });
+
+    dropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!toolbar.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+}
+
+function syncMapSearchKeyword(keyword) {
+    const value = String(keyword || '');
+    const overlayInput = document.getElementById('map_search_input');
+    const legacyInput = document.getElementById('addr_search');
+    if (overlayInput && overlayInput.value !== value) {
+        overlayInput.value = value;
+    }
+    if (legacyInput && legacyInput.value !== value) {
+        legacyInput.value = value;
+    }
+}
+
+function renderMapCityDropdown() {
+    const dropdown = document.getElementById('mapCityDropdown');
+    const filterInput = document.getElementById('mapCityFilterInput');
+    if (!dropdown) {
+        return;
+    }
+
+    if (filterInput && filterInput.value !== mapCityPanelState.filter) {
+        filterInput.value = mapCityPanelState.filter;
+    }
+
+    document.querySelectorAll('[data-city-tab]').forEach(function(tabButton) {
+        const isActive = tabButton.getAttribute('data-city-tab') === mapCityPanelState.tab;
+        tabButton.classList.toggle('active', isActive);
+    });
+
+    renderMapHotCities();
+    renderMapCityInitials();
+    renderMapCityList();
+    updateMapCityLabel();
+}
+
+function renderMapHotCities() {
+    const hotList = document.getElementById('mapCityHotList');
+    if (!hotList) {
+        return;
+    }
+
+    hotList.innerHTML = MAP_HOT_CITY_NAMES.map(function(cityName) {
+        const activeClass = cityName === mapCityPanelState.current ? ' active' : '';
+        return `<button type="button" class="map-city-link${activeClass}" data-city-name="${cityName}">${cityName}</button>`;
+    }).join('');
+
+    bindMapCityLinks(hotList);
+}
+
+function renderMapCityInitials() {
+    const initialsContainer = document.getElementById('mapCityInitials');
+    if (!initialsContainer) {
+        return;
+    }
+
+    if (mapCityPanelState.tab !== 'city') {
+        initialsContainer.style.display = 'none';
+        initialsContainer.innerHTML = '';
+        return;
+    }
+
+    initialsContainer.style.display = 'flex';
+    initialsContainer.innerHTML = MAP_CITY_INITIALS.map(function(initial) {
+        const activeClass = initial === mapCityPanelState.initial ? ' active' : '';
+        return `<button type="button" class="map-city-initial-btn${activeClass}" data-city-initial="${initial}">${initial}</button>`;
+    }).join('');
+
+    initialsContainer.querySelectorAll('[data-city-initial]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            mapCityPanelState.initial = button.getAttribute('data-city-initial') || '全部';
+            renderMapCityList();
+            renderMapCityInitials();
+        });
+    });
+}
+
+function renderMapCityList() {
+    const listContainer = document.getElementById('mapCityList');
+    if (!listContainer) {
+        return;
+    }
+
+    const keyword = String(mapCityPanelState.filter || '').trim();
+    if (mapCityPanelState.tab === 'city') {
+        renderMapCityListByInitial(listContainer, keyword);
+        return;
+    }
+    renderMapCityListByProvince(listContainer, keyword);
+}
+
+function renderMapCityListByProvince(container, keyword) {
+    const normalizedKeyword = normalizeKeyword(keyword);
+    const sections = [];
+
+    MAP_PROVINCE_CITY_GROUPS.forEach(function(group) {
+        const provinceMatch = !normalizedKeyword || normalizeKeyword(group.province).includes(normalizedKeyword);
+        const matchedCities = group.cities.filter(function(cityName) {
+            return !normalizedKeyword || normalizeKeyword(cityName).includes(normalizedKeyword);
+        });
+
+        if (!provinceMatch && matchedCities.length === 0) {
+            return;
+        }
+
+        const cityButtons = (provinceMatch ? group.cities : matchedCities).map(function(cityName) {
+            const activeClass = cityName === mapCityPanelState.current ? ' active' : '';
+            return `<button type="button" class="map-city-link${activeClass}" data-city-name="${cityName}">${cityName}</button>`;
+        }).join('');
+
+        const provinceActive = group.province === mapCityPanelState.current ? ' active' : '';
+        sections.push(
+            `<div class="map-city-group">
+                <div class="map-city-group-title">
+                    <button type="button" class="map-city-link map-city-group-link${provinceActive}" data-city-name="${group.province}">${group.province}</button>
+                </div>
+                <div class="map-city-group-items">${cityButtons}</div>
+            </div>`
+        );
+    });
+
+    container.innerHTML = sections.length > 0 ? sections.join('') : '<div class="map-city-empty">未找到匹配的城市或省份</div>';
+    bindMapCityLinks(container);
+}
+
+function renderMapCityListByInitial(container, keyword) {
+    const normalizedKeyword = normalizeKeyword(keyword);
+    const citySet = new Set();
+    MAP_PROVINCE_CITY_GROUPS.forEach(function(group) {
+        group.cities.forEach(function(cityName) {
+            citySet.add(cityName);
+        });
+    });
+
+    const cityList = Array.from(citySet);
+    const groups = [];
+
+    MAP_CITY_INITIALS.forEach(function(initial) {
+        if (initial === '全部') {
+            return;
+        }
+        if (mapCityPanelState.initial !== '全部' && mapCityPanelState.initial !== initial) {
+            return;
+        }
+
+        const currentCities = cityList.filter(function(cityName) {
+            const initialMatched = (MAP_CITY_INITIAL_MAP[cityName] || '#') === initial;
+            const keywordMatched = !normalizedKeyword || normalizeKeyword(cityName).includes(normalizedKeyword);
+            return initialMatched && keywordMatched;
+        });
+
+        if (currentCities.length === 0) {
+            return;
+        }
+
+        const buttons = currentCities.map(function(cityName) {
+            const activeClass = cityName === mapCityPanelState.current ? ' active' : '';
+            return `<button type="button" class="map-city-link${activeClass}" data-city-name="${cityName}">${cityName}</button>`;
+        }).join('');
+
+        groups.push(
+            `<div class="map-city-group">
+                <div class="map-city-group-title">${initial}</div>
+                <div class="map-city-group-items">${buttons}</div>
+            </div>`
+        );
+    });
+
+    container.innerHTML = groups.length > 0 ? groups.join('') : '<div class="map-city-empty">未找到匹配的城市</div>';
+    bindMapCityLinks(container);
+}
+
+function bindMapCityLinks(container) {
+    if (!container) {
+        return;
+    }
+    container.querySelectorAll('[data-city-name]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const cityName = button.getAttribute('data-city-name');
+            if (cityName) {
+                selectMapCity(cityName);
+            }
+        });
+    });
+}
+
+function selectMapCity(cityName) {
+    const nextCityName = String(cityName || '').trim();
+    if (!nextCityName || !map) {
+        return;
+    }
+
+    mapCityPanelState.current = nextCityName;
+    updateMapCityLabel();
+
+    const targetPoint = findBuiltinPlacePointByKeyword(nextCityName) || MAP_CITY_FALLBACK_POINTS[nextCityName];
+    if (targetPoint && Number.isFinite(Number(targetPoint.lat)) && Number.isFinite(Number(targetPoint.lng))) {
+        map.setView([Number(targetPoint.lat), Number(targetPoint.lng)], Number(targetPoint.zoom) || map.getZoom());
+    }
+
+    const dropdown = document.getElementById('mapCityDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('show');
+    }
+
+    renderMapCityDropdown();
+}
+
+function updateMapCityLabel() {
+    const cityName = String(mapCityPanelState.current || '北京').trim() || '北京';
+    const cityLabel = document.getElementById('mapCityLabel');
+    const currentCity = document.getElementById('mapCurrentCityName');
+    if (cityLabel) {
+        cityLabel.textContent = cityName;
+    }
+    if (currentCity) {
+        currentCity.textContent = cityName;
+    }
+}
+
 function updateData(lat, lng) {
     lat = parseFloat(lat).toFixed(6);
     lng = parseFloat(lng).toFixed(6);
@@ -383,5 +779,16 @@ function resetAll() {
     document.getElementById('res_deg').innerText = '--';
     document.getElementById('res_dms').innerText = '--';
     if (marker) map.removeLayer(marker);
+    marker = null;
+    mapCityPanelState.filter = '';
+    const dropdown = document.getElementById('mapCityDropdown');
+    const filterInput = document.getElementById('mapCityFilterInput');
+    if (dropdown) {
+        dropdown.classList.remove('show');
+    }
+    if (filterInput) {
+        filterInput.value = '';
+    }
+    syncMapSearchKeyword('');
     map.setView([39.914885, 116.403874], 10);
 }

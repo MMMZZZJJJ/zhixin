@@ -1,5 +1,8 @@
 /* 席位查询模块 - 9069接口 */
 
+const SEAT_PAGE_SIZE = 20;
+let seatModalState = null;
+
 // 查询席位（下单）
 async function placeOrder() {
     const lat = document.getElementById('lat_input').value;
@@ -59,14 +62,13 @@ async function placeOrder() {
         }
         
         const data = await response.json();
-        const topLevelSeatCount = getTopLevelSeatCount(data);
         const seatList = normalizeSeatList(data);
         // console.log("接口返回数据：", data);
         
         // 解析返回数据并显示
         if (seatList.length > 0) {
             cacheSeatList(lng, lat, seatList);
-            showResultModal(seatList, lng, lat, topLevelSeatCount);
+            showResultModal(seatList, lng, lat, seatList.length);
         } else {
             const cachedSeatList = readSeatCache(lng, lat);
             if (cachedSeatList.length > 0) {
@@ -96,24 +98,47 @@ async function placeOrder() {
 
 // 显示结果弹窗
 function showResultModal(data, lng, lat, seatCount = data.length) {
+    seatModalState = {
+        data: Array.isArray(data) ? data : [],
+        lng,
+        lat,
+        seatCount,
+        currentPage: 1
+    };
+    renderSeatModalPage();
+}
+
+function renderSeatModalPage() {
+    if (!seatModalState) {
+        return;
+    }
+
+    const { data, lng, lat, seatCount } = seatModalState;
     const modalBody = document.getElementById('modalBody');
-    
-    // 构建基本信息
+    const totalSeats = Array.isArray(data) ? data.length : 0;
+    const totalPages = Math.max(1, Math.ceil(totalSeats / SEAT_PAGE_SIZE));
+    const currentPage = Math.min(Math.max(seatModalState.currentPage || 1, 1), totalPages);
+    seatModalState.currentPage = currentPage;
+    const startIndex = (currentPage - 1) * SEAT_PAGE_SIZE;
+    const endIndex = Math.min(startIndex + SEAT_PAGE_SIZE, totalSeats);
+    const pageItems = data.slice(startIndex, endIndex);
+
     let html = `
         <div class="result-info">
             <p><strong>经纬度：</strong>${lng}, ${lat}</p>
             <p><strong>席位数量：</strong>共找到 ${seatCount} 个可用席位</p>
+            <p><strong>当前分页：</strong>第 ${currentPage} / ${totalPages} 页，显示第 ${totalSeats === 0 ? 0 : startIndex + 1}-${endIndex} 条</p>
         </div>
     `;
-    
-    // 构建每个席位卡片
-    data.forEach((item, index) => {
+
+    pageItems.forEach((item, index) => {
+        const absoluteIndex = startIndex + index;
         const imagingModeText = formatSeatImagingMode(item['05-ImagingMode']);
         const sourceName = item['01-SourceName'] || item['01-SourcName'] || '未知';
             
         html += `
             <div class="seat-card">
-                <h3>席位 ${index + 1}</h3>
+                <h3>席位 ${absoluteIndex + 1}</h3>
                 <div class="info-row">
                     <span class="info-label">卫星名称：</span>
                     <span class="info-value">${sourceName}</span>
@@ -135,31 +160,77 @@ function showResultModal(data, lng, lat, seatCount = data.length) {
                     <span class="info-value">${item['07-DirectiveUpload'] || '未知'}</span>
                 </div>
                 <div class="task-submit-box">
-                    <button class="btn btn-submit-task" data-index="${index}">
+                    <button class="btn btn-submit-task" data-index="${absoluteIndex}">
                         提交成像任务
                     </button>
                 </div>
             </div>
         `;
     });
-    
+
+    if (totalPages > 1) {
+        html += buildSeatPaginationHtml(currentPage, totalPages);
+    }
+
     modalBody.innerHTML = html;
     document.getElementById('resultModal').style.display = 'block';
-    
-    // 立即绑定事件（不使用setTimeout）
+
     const submitButtons = document.querySelectorAll('.btn-submit-task');
-    // console.log('找到提交按钮数量：', submitButtons.length);
-    
     submitButtons.forEach((button) => {
         const index = parseInt(button.getAttribute('data-index'));
-        // console.log(`绑定第 ${index + 1} 个按钮的点击事件`);
-        
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            // console.log(`点击了第 ${index + 1} 个按钮`);
-            // console.log('席位数据：', data[index]);
             submitTask(data[index]);
+        });
+    });
+
+    bindSeatPaginationEvents();
+    modalBody.scrollTop = 0;
+}
+
+function buildSeatPaginationHtml(currentPage, totalPages) {
+    const pageNumbers = [];
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+
+    for (let page = startPage; page <= endPage; page++) {
+        pageNumbers.push(`
+            <button class="seat-page-btn ${page === currentPage ? 'active' : ''}" data-page="${page}">
+                ${page}
+            </button>
+        `);
+    }
+
+    return `
+        <div class="seat-pagination">
+            <div class="seat-pagination-info">
+                共 ${totalPages} 页，每页 ${SEAT_PAGE_SIZE} 条
+            </div>
+            <div class="seat-pagination-controls">
+                <button class="seat-page-btn" data-page="1" ${currentPage === 1 ? 'disabled' : ''}>首页</button>
+                <button class="seat-page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>
+                ${pageNumbers.join('')}
+                <button class="seat-page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>
+                <button class="seat-page-btn" data-page="${totalPages}" ${currentPage === totalPages ? 'disabled' : ''}>末页</button>
+            </div>
+        </div>
+    `;
+}
+
+function bindSeatPaginationEvents() {
+    const pageButtons = document.querySelectorAll('.seat-page-btn[data-page]');
+    pageButtons.forEach((button) => {
+        button.addEventListener('click', function() {
+            if (button.disabled || !seatModalState) {
+                return;
+            }
+            const nextPage = parseInt(button.getAttribute('data-page'), 10);
+            if (!Number.isFinite(nextPage) || nextPage === seatModalState.currentPage) {
+                return;
+            }
+            seatModalState.currentPage = nextPage;
+            renderSeatModalPage();
         });
     });
 }
@@ -179,6 +250,7 @@ function showNoResultModal() {
 
 // 关闭弹窗
 function closeModal() {
+    seatModalState = null;
     document.getElementById('resultModal').style.display = 'none';
 }
 
@@ -222,25 +294,7 @@ function formatSeatImagingMode(mode) {
 }
 
 function getTopLevelSeatCount(payload) {
-    if (Array.isArray(payload)) {
-        return payload.length;
-    }
-    if (!payload || typeof payload !== 'object') {
-        return 0;
-    }
-    const candidateLists = [
-        payload.data,
-        payload.list,
-        payload.rows,
-        payload.result,
-        payload.items,
-        payload.records
-    ];
-    const hitList = candidateLists.find(Array.isArray);
-    if (hitList) {
-        return hitList.length;
-    }
-    return 1;
+    return normalizeSeatList(payload).length;
 }
 
 function normalizeSeatList(payload) {
@@ -269,41 +323,57 @@ function normalizeSeatArray(rawList) {
     const normalized = [];
     rawList.forEach((entry) => {
         if (typeof entry === 'string') {
-            normalized.push(normalizeSeatStringRecord(entry));
+            normalized.push(...normalizeSeatStringRecords(entry));
             return;
         }
         normalized.push(normalizeSeatItem(entry));
     });
-    return normalized;
+    return normalized.filter(item => item && Object.keys(item).length > 0);
 }
 
-function normalizeSeatStringRecord(rawText) {
+function normalizeSeatStringRecords(rawText) {
     if (!rawText || typeof rawText !== 'string') {
-        return {};
+        return [];
     }
     const sourceNameMatch = rawText.match(/'01-(?:SourceName|SourcName)'\s*:\s*'([^']*)'/);
     const longitudeMatch = rawText.match(/'02-Longitude'\s*:\s*'([^']*)'/);
     const latitudeMatch = rawText.match(/'03-Latitude'\s*:\s*'([^']*)'/);
-    const centralityTimeMatch = rawText.match(/'04-CentralityTime'\s*:\s*'([^']*)'/);
-    const rollPositionMatch = rawText.match(/'06-RollPosition'\s*:\s*([^,}\]]+)/);
-    const directiveUploadMatch = rawText.match(/'07-DirectiveUpload'\s*:\s*'([^']*)'/);
-    const imagingModeMatch = rawText.match(/'05-ImagingMode'\s*:\s*\[([^\]]*)\]/);
     const sourceName = sourceNameMatch ? sourceNameMatch[1] : '';
     const longitude = longitudeMatch ? longitudeMatch[1] : '';
     const latitude = latitudeMatch ? latitudeMatch[1] : '';
+    const recordParts = rawText.split(/\{'04-CentralityTime'\s*:\s*/).slice(1);
+
+    if (recordParts.length === 0) {
+        return [normalizeSeatItem(buildSeatItemFromStringPart(rawText, sourceName, longitude, latitude))];
+    }
+
+    return recordParts.map((part) => {
+        const currentText = `{'04-CentralityTime': ${part}`;
+        return normalizeSeatItem(buildSeatItemFromStringPart(currentText, sourceName, longitude, latitude));
+    }).filter(item => item && Object.keys(item).length > 0);
+}
+
+function buildSeatItemFromStringPart(rawText, sourceName, longitude, latitude) {
+    const centralityTimeMatch = rawText.match(/'04-CentralityTime'\s*:\s*'([^']*)'/);
+    const rollPositionMatch = rawText.match(/'06-RollPosition'\s*:\s*([^,}\]]+)/);
+    const directiveUploadMatch = rawText.match(/'07-DirectiveUpload'\s*:\s*('([^']*)'|None|null|[^,}\]]+)/i);
+    const imagingModeMatch = rawText.match(/'05-ImagingMode'\s*:\s*\[([^\]]*)\]/);
     const imagingModeList = (imagingModeMatch ? imagingModeMatch[1] : '')
         .split(',')
         .map(item => item.trim().replace(/^'+|'+$/g, ''))
         .filter(Boolean);
-    return normalizeSeatItem({
+    const directiveUploadValue = directiveUploadMatch
+        ? String(directiveUploadMatch[2] || directiveUploadMatch[1] || '').trim().replace(/^'+|'+$/g, '')
+        : '';
+    return {
         '01-SourceName': sourceName,
         '02-Longitude': longitude,
         '03-Latitude': latitude,
         '04-CentralityTime': centralityTimeMatch ? centralityTimeMatch[1] : '',
         '05-ImagingMode': imagingModeList.length > 0 ? imagingModeList : '',
         '06-RollPosition': rollPositionMatch ? String(rollPositionMatch[1]).trim().replace(/^'+|'+$/g, '') : '',
-        '07-DirectiveUpload': directiveUploadMatch ? directiveUploadMatch[1] : ''
-    });
+        '07-DirectiveUpload': directiveUploadValue
+    };
 }
 
 function normalizeSeatItem(rawItem) {

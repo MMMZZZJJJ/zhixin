@@ -86,7 +86,7 @@ let labelLayers = [];
 // 添加国家标注到地图
 function addCountryLabels(map) {
     // 清除已有标注
-    clearCountryLabels();
+    clearCountryLabels(map);
     
     countryLabels.forEach(country => {
         // 创建自定义 HTML 标注
@@ -109,9 +109,13 @@ function addCountryLabels(map) {
     updateLabelsVisibility(map);
     
     // 监听缩放事件
-    map.on('zoomend', function() {
+    if (map.__countryLabelZoomHandler) {
+        map.off('zoomend', map.__countryLabelZoomHandler);
+    }
+    map.__countryLabelZoomHandler = function() {
         updateLabelsVisibility(map);
-    });
+    };
+    map.on('zoomend', map.__countryLabelZoomHandler);
 }
 
 // 根据缩放级别更新标注显示
@@ -135,10 +139,11 @@ function updateLabelsVisibility(map) {
 }
 
 // 清除所有国家标注
-function clearCountryLabels() {
+function clearCountryLabels(mapInstance) {
+    const activeMap = mapInstance || (typeof map !== 'undefined' ? map : null);
     labelLayers.forEach(marker => {
-        if (map.hasLayer(marker)) {
-            map.removeLayer(marker);
+        if (activeMap && activeMap.hasLayer(marker)) {
+            activeMap.removeLayer(marker);
         }
     });
     labelLayers = [];

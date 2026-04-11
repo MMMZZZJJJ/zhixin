@@ -27,6 +27,24 @@
             setFontSize();
             window.addEventListener('resize', setFontSize);
         })();
+        (function() {
+            function preloadDashboardBackground() {
+                var img = new Image();
+                img.decoding = 'async';
+                img.onload = function() {
+                    document.documentElement.style.setProperty('--dashboard-bg-image', 'url("access/image/bj.png")');
+                    document.documentElement.classList.add('dashboard-bg-ready');
+                };
+                img.src = 'access/image/bj.png';
+            }
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(preloadDashboardBackground, { timeout: 1500 });
+            } else {
+                window.addEventListener('load', function() {
+                    window.setTimeout(preloadDashboardBackground, 150);
+                });
+            }
+        })();
     </script>
 </head>
 <body>
@@ -59,7 +77,35 @@
                 <div class="panel-content">
                     <div class="form-group">
                         <label>粗略地址搜索</label>
-                        <input type="text" id="addr_search" placeholder="如：北京市朝阳区">
+                        <div class="addr-search-row" id="mapToolbar">
+                            <input class="addr-search-input" type="text" id="addr_search" placeholder="&#22914;&#65306;&#21271;&#20140;&#24066;&#26397;&#38451;&#21306;">
+                            <div class="map-city-selector addr-city-selector">
+                                <button class="map-city-trigger" id="mapCityTrigger" type="button">
+                                    <span id="mapCityLabel">&#21271;&#20140;</span>
+                                    <span class="map-city-arrow">&#9660;</span>
+                                </button>
+                                <div class="map-city-dropdown" id="mapCityDropdown">
+                                    <div class="map-city-dropdown-header">
+                                        <div class="map-city-current">&#24403;&#21069;&#22478;&#24066;&#65306;<strong id="mapCurrentCityName">&#21271;&#20140;</strong></div>
+                                        <button class="map-city-close" id="mapCityClose" type="button">&times;</button>
+                                    </div>
+                                    <div class="map-city-hotline">
+                                        <span class="map-city-hot-label">&#28909;&#38376;&#22478;&#24066;</span>
+                                        <div class="map-city-hot-list" id="mapCityHotList"></div>
+                                    </div>
+                                    <div class="map-city-tabs">
+                                        <button class="map-city-tab active" type="button" data-city-tab="province">&#25353;&#30465;&#20221;</button>
+                                        <button class="map-city-tab" type="button" data-city-tab="city">&#25353;&#22478;&#24066;</button>
+                                        <div class="map-city-search-box">
+                                            <span class="map-city-search-icon">&#8981;</span>
+                                            <input type="text" id="mapCityFilterInput" placeholder="&#35831;&#36755;&#20837;&#22478;&#24066;">
+                                        </div>
+                                    </div>
+                                    <div class="map-city-initials" id="mapCityInitials"></div>
+                                    <div class="map-city-list" id="mapCityList"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="btn-group">
                         <button class="btn btn-secondary" onclick="searchAddress()">搜索地址</button>

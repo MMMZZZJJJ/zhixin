@@ -11,8 +11,7 @@
     height: 100%;
     background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.1) 0%, rgba(10, 14, 39, 0.95) 100%),
                 rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn 0.2s linear;
 }
 
 @keyframes fadeIn {
@@ -70,7 +69,7 @@
     width: 300px;
     height: 300px;
     background: radial-gradient(circle, rgba(0, 212, 255, 0.15) 0%, transparent 70%);
-    animation: rotate 20s linear infinite;
+    animation: none;
 }
 
 @keyframes rotate {
@@ -194,6 +193,61 @@
     font-weight: 600;
 }
 
+.seat-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 18px 20px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(13, 27, 42, 0.7) 0%, rgba(27, 38, 59, 0.7) 100%);
+}
+
+.seat-pagination-info {
+    color: #9fdfff;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.seat-pagination-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.seat-page-btn {
+    min-width: 44px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 212, 255, 0.35);
+    background: rgba(0, 212, 255, 0.08);
+    color: #dff9ff;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.seat-page-btn:hover {
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.18);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.25);
+}
+
+.seat-page-btn.active {
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    color: #0a1929;
+    font-weight: 700;
+}
+
+.seat-page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 /* 席位卡片 */
 .seat-card {
     background: linear-gradient(135deg, rgba(13, 27, 42, 0.8) 0%, rgba(27, 38, 59, 0.8) 100%);
@@ -306,7 +360,7 @@
 .no-result-icon {
     font-size: 64px;
     margin-bottom: 20px;
-    animation: pulse 2s infinite;
+    animation: none;
 }
 
 @keyframes pulse {
@@ -453,6 +507,15 @@
     .result-info::before {
         font-size: 32px;
         right: 10px;
+    }
+
+    .seat-pagination {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .seat-pagination-controls {
+        justify-content: flex-start;
     }
 }
 

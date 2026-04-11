@@ -65,7 +65,6 @@ body {
   position: absolute;
   border-radius: 999px;
   background: rgba(146, 174, 255, 0.18);
-  filter: blur(1px);
   z-index: -1;
 }
 
@@ -119,7 +118,7 @@ body {
   height: min(560px, 100%);
   position: relative;
   transform: perspective(900px) rotateX(var(--scene-rx)) rotateY(var(--scene-ry)) scale(var(--scene-scale));
-  transition: transform 80ms linear;
+  transition: transform 120ms linear;
 }
 
 .character {
@@ -128,7 +127,7 @@ body {
   display: grid;
   place-items: center;
   transform-origin: center;
-  animation: floatIn 0.5s ease-out both, bob 3.8s ease-in-out infinite;
+  animation: floatIn 0.35s ease-out both;
   box-shadow: 0 12px 25px rgba(14, 18, 33, 0.2);
 }
 
@@ -156,7 +155,6 @@ body {
   border-radius: 50%;
   top: -2px;
   overflow: hidden;
-  backdrop-filter: blur(2px);
 }
 
 .eye::after {
@@ -496,16 +494,6 @@ h1 {
   }
 }
 
-@keyframes bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
 @media (max-width: 1199px) {
   .shell {
     grid-template-columns: 5fr 5fr;
@@ -565,5 +553,18 @@ h1 {
   }
   .auth-alt {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene,
+  .character,
+  .character .face,
+  .eye::after,
+  .submit,
+  .alt-btn,
+  .input {
+    animation: none !important;
+    transition: none !important;
   }
 }
