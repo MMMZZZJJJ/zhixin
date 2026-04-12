@@ -4,7 +4,7 @@ const AUTH_USER_KEY = 'zs_auth_user';
 
 function getAuthConfig() {
     const authConfig = window.APP_CONFIG?.auth || {};
-    const baseUrl = String(authConfig.baseUrl || 'http://127.0.0.1:8000/api/auth').replace(/\/+$/, '');
+    const baseUrl = String(authConfig.baseUrl || 'http://127.0.0.1:9504/api/auth').replace(/\/+$/, '');
     return {
         baseUrl,
         loginUrl: authConfig.loginUrl || `${baseUrl}/login`,

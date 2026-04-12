@@ -28,9 +28,9 @@ function loadEnvFile(envPath) {
 
 loadEnvFile(path.join(__dirname, '.env'));
 
-const PORT = Number(process.env.PORT || 8080);
+const PORT = Number(process.env.PORT || 9503);
 const ROOT_DIR = path.join(__dirname, 'frontend');
-const DJANGO_API_BASE_URL = String(process.env.DJANGO_API_BASE_URL || 'http://127.0.0.1:8000/api').trim();
+const DJANGO_API_BASE_URL = String(process.env.DJANGO_API_BASE_URL || 'http://127.0.0.1:9504/api').trim();
 const PASSWORD_MIN_LENGTH = Number(process.env.PASSWORD_MIN_LENGTH || 10);
 
 const MIME_TYPES = {

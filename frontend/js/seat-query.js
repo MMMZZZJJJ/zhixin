@@ -126,7 +126,7 @@ function renderSeatModalPage() {
     let html = `
         <div class="result-info">
             <p><strong>经纬度：</strong>${lng}, ${lat}</p>
-            <p><strong>席位数量：</strong>共找到 ${seatCount} 个可用席位</p>
+            <p><strong>成像时间预测数量：</strong>共找到 ${seatCount} 个可拍摄时段</p>
             <p><strong>当前分页：</strong>第 ${currentPage} / ${totalPages} 页，显示第 ${totalSeats === 0 ? 0 : startIndex + 1}-${endIndex} 条</p>
         </div>
     `;
@@ -138,7 +138,7 @@ function renderSeatModalPage() {
             
         html += `
             <div class="seat-card">
-                <h3>席位 ${absoluteIndex + 1}</h3>
+                <h3>可拍摄时段 ${absoluteIndex + 1}</h3>
                 <div class="info-row">
                     <span class="info-label">卫星名称：</span>
                     <span class="info-value">${sourceName}</span>

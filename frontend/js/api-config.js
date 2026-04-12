@@ -1,5 +1,5 @@
 const APP_API_BASE = String(
-    window.RUNTIME_CONFIG?.apiBaseUrl || 'http://127.0.0.1:8000/api'
+    window.RUNTIME_CONFIG?.apiBaseUrl || 'http://127.0.0.1:9504/api'
 ).replace(/\/+$/, '');
 
 window.APP_CONFIG = {
