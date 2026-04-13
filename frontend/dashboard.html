@@ -8,9 +8,13 @@
     <!-- 引入开源地图库 -->
     <!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /> -->
     <link rel="icon" type="image/jpeg" href="access/image/logo.jpg">
+    <link rel="dns-prefetch" href="//webrd01.is.autonavi.com">
+    <link rel="dns-prefetch" href="//webrd02.is.autonavi.com">
+    <link rel="dns-prefetch" href="//webrd03.is.autonavi.com">
+    <link rel="dns-prefetch" href="//webrd04.is.autonavi.com">
     <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> -->
     <link rel="stylesheet" href="lib/left/leaflet.css" />
-    <script src="lib/left/Leaflet.js"></script>
+    <script defer src="lib/left/Leaflet.js"></script>
     
     <!-- 引入样式 -->
     <link rel="stylesheet" href="css/dashboard.css" />
@@ -32,10 +36,10 @@
                 var img = new Image();
                 img.decoding = 'async';
                 img.onload = function() {
-                    document.documentElement.style.setProperty('--dashboard-bg-image', 'url("access/image/bj.png")');
+                    document.documentElement.style.setProperty('--dashboard-bg-image', 'url("access/image/bj-optimized.jpg")');
                     document.documentElement.classList.add('dashboard-bg-ready');
                 };
-                img.src = 'access/image/bj.png';
+                img.src = 'access/image/bj-optimized.jpg';
             }
             if (window.requestIdleCallback) {
                 window.requestIdleCallback(preloadDashboardBackground, { timeout: 1500 });
@@ -301,52 +305,50 @@
 </div>
 
 <!-- 引入模块化JavaScript -->
-<script src="js/utils.js"></script>
-<script src="js/country-labels.js"></script>
-<script src="js/map.js"></script>
-<script src="/runtime-config.js"></script>
-<script src="js/api-config.js"></script>
-<script src="js/auth-store.js"></script>
-<script src="js/auth-guard.js"></script>
-<script src="js/seat-query.js"></script>
-<script src="js/task-submit.js"></script>
-<script src="js/data-delivery.js"></script>
-<script src="js/main.js"></script>
+<script defer src="js/utils.js"></script>
+<script defer src="js/map.js"></script>
+<script defer src="/runtime-config.js"></script>
+<script defer src="js/api-config.js"></script>
+<script defer src="js/auth-store.js"></script>
+<script defer src="js/auth-guard.js"></script>
+<script defer src="js/main.js"></script>
 
 <script>
-// 顶部时间显示
-function updateTime() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hour = String(now.getHours()).padStart(2, '0');
-    const minute = String(now.getMinutes()).padStart(2, '0');
-    const second = String(now.getSeconds()).padStart(2, '0');
-    const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-    const weekDay = weekDays[now.getDay()];
-    
-    document.getElementById('time').innerHTML = 
-        `${year}-${month}-${day}&nbsp;&nbsp;${hour}:${minute}:${second}&nbsp;&nbsp;${weekDay}`;
-}
-setInterval(updateTime, 1000);
-updateTime();
+document.addEventListener('DOMContentLoaded', function() {
+    function updateTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        const second = String(now.getSeconds()).padStart(2, '0');
+        const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        const weekDay = weekDays[now.getDay()];
+        
+        document.getElementById('time').innerHTML = 
+            `${year}-${month}-${day}&nbsp;&nbsp;${hour}:${minute}:${second}&nbsp;&nbsp;${weekDay}`;
+    }
 
-var logoutButton = document.getElementById('btn-logout');
-if (logoutButton) {
-    logoutButton.addEventListener('click', async function() {
-        if (typeof logoutCurrentUser === 'function') {
-            await logoutCurrentUser();
-            return;
-        }
-        if (typeof clearAuthSession === 'function') {
-            clearAuthSession();
-        }
-        if (typeof redirectToLogin === 'function') {
-            redirectToLogin();
-        }
-    });
-}
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    var logoutButton = document.getElementById('btn-logout');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', async function() {
+            if (typeof logoutCurrentUser === 'function') {
+                await logoutCurrentUser();
+                return;
+            }
+            if (typeof clearAuthSession === 'function') {
+                clearAuthSession();
+            }
+            if (typeof redirectToLogin === 'function') {
+                redirectToLogin();
+            }
+        });
+    }
+});
 </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-* {
+﻿* {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -8,7 +8,7 @@
 body {
     padding: 0px;
     margin: 0px;
-    font-family: "微软雅黑";
+    font-family: "寰蒋闆呴粦";
 }
 
 html,
@@ -45,7 +45,7 @@ ol {
     list-style: none;
 }
 
-/* 滚动条样式 */
+/* 婊氬姩鏉℃牱寮?*/
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -64,7 +64,7 @@ ol {
     height: 100%;
 }
 
-/* 头部 */
+/* 澶撮儴 */
 .header {
     height: 1.2rem;
     width: 100%;
@@ -101,14 +101,14 @@ ol {
     height: 1.2rem;
 }
 
-/* 内容区域 */
+/* 鍐呭鍖哄煙 */
 .content {
     padding: .2rem .1rem 0 .1rem;
     display: flex;
     height: calc(100% - 1.4rem);
 }
 
-/* 左侧面板 */
+/* 宸︿晶闈㈡澘 */
 .content-left {
     width: 25%;
     padding: .1rem;
@@ -118,11 +118,12 @@ ol {
     overflow-y: auto;
 }
 
-/* 中间地图 */
+/* 涓棿鍦板浘 */
 .content-center {
     width: 50%;
     padding: .1rem .2rem;
     position: relative;
+    contain: layout paint;
 }
 
 .map-toolbar {
@@ -422,9 +423,34 @@ ol {
     border: 2px solid #55bcd4;
     box-shadow: 0 0 20px rgba(85, 188, 212, 0.5);
     background: linear-gradient(180deg, rgba(10, 27, 52, 0.88) 0%, rgba(6, 18, 35, 0.96) 100%);
+    position: relative;
+    overflow: hidden;
+    contain: layout paint;
 }
 
-/* 右侧面板 */
+#map::before {
+    content: "地图加载中...";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: .18rem;
+    letter-spacing: .04rem;
+    background:
+        radial-gradient(circle at center, rgba(19, 72, 128, 0.32) 0%, rgba(10, 27, 52, 0) 58%),
+        linear-gradient(180deg, rgba(10, 27, 52, 0.9) 0%, rgba(6, 18, 35, 0.98) 100%);
+    transition: opacity .24s ease;
+    pointer-events: none;
+    z-index: 300;
+}
+
+#map.map-ready::before {
+    opacity: 0;
+}
+
+/* 鍙充晶闈㈡澘 */
 .content-right {
     width: 25%;
     padding: .1rem;
@@ -434,13 +460,14 @@ ol {
     overflow-y: auto;
 }
 
-/* 面板样式 */
+/* 闈㈡澘鏍峰紡 */
 .panel {
     width: 100%;
     margin-bottom: .2rem;
     border: 1px solid #55bcd4;
     background: rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
+    contain: layout paint;
 }
 
 .panel-flex {
@@ -486,7 +513,7 @@ ol {
     overflow: visible;
 }
 
-/* 表单样式 */
+/* 琛ㄥ崟鏍峰紡 */
 .form-group {
     margin-bottom: .2rem;
 }
@@ -568,7 +595,7 @@ ol {
     max-height: 2.6rem;
 }
 
-/* 按钮组 */
+/* 鎸夐挳缁?*/
 .btn-group {
     display: flex;
     gap: .15rem;
@@ -635,7 +662,7 @@ ol {
     background: rgba(85, 188, 212, 0.5);
 }
 
-/* 信息表格 */
+/* 淇℃伅琛ㄦ牸 */
 .info-table {
     width: 100%;
     border-collapse: collapse;
@@ -668,7 +695,7 @@ ol {
     font-size: .18rem;
 }
 
-/* 使用说明 */
+/* 浣跨敤璇存槑 */
 .tips {
     font-size: .16rem;
     color: #029698;
@@ -679,7 +706,7 @@ ol {
     margin-bottom: .15rem;
 }
 
-/* 统计网格 */
+/* 缁熻缃戞牸 */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -705,7 +732,7 @@ ol {
     color: #ffffff;
 }
 
-/* 任务列表 */
+/* 浠诲姟鍒楄〃 */
 .task-list {
     font-size: .14rem;
 }
@@ -749,7 +776,7 @@ ol {
     font-size: .12rem;
 }
 
-/* 响应式字体 */
+/* 鍝嶅簲寮忓瓧浣?*/
 @media screen and (max-width: 1920px) {
     html {
         font-size: 16px;
@@ -784,7 +811,7 @@ ol {
     }
 }
 
-/* 修复弹窗按钮样式 */
+/* 淇寮圭獥鎸夐挳鏍峰紡 */
 .modal {
     z-index: 99999 !important;
 }
@@ -815,3 +842,4 @@ ol {
 .modal-footer .btn-confirm {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
 }
+
