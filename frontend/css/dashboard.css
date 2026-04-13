@@ -583,11 +583,12 @@ ol {
 }
 
 .addr-search-row .map-city-dropdown {
-    left: auto;
-    right: 0;
-    top: calc(100% + .08rem);
+    position: fixed;
+    left: 12px;
+    right: auto;
+    top: 12px;
     width: min(6.25rem, calc(100vw - .6rem));
-    min-width: 5.8rem;
+    min-width: min(5.8rem, calc(100vw - .6rem));
     max-height: min(5.1rem, 70vh);
     z-index: 9999;
     overflow: auto;
