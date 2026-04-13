@@ -158,9 +158,6 @@ window.addEventListener('load', async () => {
         username.value = presetUsername;
         password.focus();
     }
-    if (typeof checkAuthForLoginPage === 'function') {
-        await checkAuthForLoginPage();
-    }
 });
 
 if (registerButton) {

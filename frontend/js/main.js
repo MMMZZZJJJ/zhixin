@@ -3,6 +3,7 @@
 // 椤甸潰鍔犺浇瀹屾垚鍚庡垵濮嬪寲
 let dashboardBootstrapped = false;
 let mapInitScheduled = false;
+let orderScriptsWarmupScheduled = false;
 const dashboardScriptPromises = new Map();
 
 function loadDashboardScript(src) {
@@ -91,6 +92,24 @@ if (typeof window.queryDataDelivery !== 'function') {
     window.queryDataDelivery = queryDataDeliveryBootstrap;
 }
 
+function scheduleOrderScriptsWarmup() {
+    if (orderScriptsWarmupScheduled) {
+        return;
+    }
+    orderScriptsWarmupScheduled = true;
+
+    const warmup = function() {
+        ensureOrderScriptsLoaded().catch(function() {});
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(warmup, { timeout: 2500 });
+        return;
+    }
+
+    window.setTimeout(warmup, 1800);
+}
+
 function scheduleMapInit() {
     if (mapInitScheduled || typeof initMap !== 'function') {
         return;
@@ -101,11 +120,16 @@ function scheduleMapInit() {
         window.requestAnimationFrame(function() {
             window.setTimeout(function() {
                 initMap();
-            }, 32);
+            }, 80);
         });
     };
 
-    window.setTimeout(startInit, 16);
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(startInit, { timeout: 1200 });
+        return;
+    }
+
+    window.setTimeout(startInit, 120);
 }
 
 async function bootstrapDashboard() {
@@ -122,8 +146,6 @@ async function bootstrapDashboard() {
         return;
     }
 
-    scheduleMapInit();
-
     if (typeof checkAuthOrRedirect === 'function') {
         try {
             const authed = await checkAuthOrRedirect();
@@ -137,8 +159,12 @@ async function bootstrapDashboard() {
             if (typeof redirectToLogin === 'function') {
                 redirectToLogin();
             }
+            return;
         }
     }
+
+    scheduleMapInit();
+    scheduleOrderScriptsWarmup();
 }
 
 if (document.readyState === 'loading') {

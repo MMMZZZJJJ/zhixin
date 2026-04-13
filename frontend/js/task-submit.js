@@ -97,7 +97,7 @@ function closeConfirmModal() {
 async function doSubmitTask(lng, lat, centralityTime, imagingMode, payTime, selectedSourceName) {
     try {
         const taskPlanningConfig = window.APP_CONFIG?.api?.taskPlanning || {};
-        const apiBase = taskPlanningConfig.url || 'https://49e35345.cpolar.top';
+        const apiBase = taskPlanningConfig.url || '/api/task-planning';
         const apiUrl = `${apiBase}?` +
             `Longitude=${lng}&` +
             `Latitude=${lat}&` +
@@ -164,7 +164,7 @@ async function doSubmitTask(lng, lat, centralityTime, imagingMode, payTime, sele
             `任务提交失败：${error.message}\n\n` +
             `可能原因：\n` +
             `1. 网络连接问题\n` +
-            `2. 接口服务未启动（${window.APP_CONFIG?.api?.taskPlanning?.url || '49e35345.cpolar.top'}）\n` +
+            `2. 接口服务未启动（${window.APP_CONFIG?.api?.taskPlanning?.url || '/api/task-planning'}）\n` +
             `3. 跨域限制（需要后端配置CORS）\n\n` +
             `请检查网络连接或联系技术支持。`
         );

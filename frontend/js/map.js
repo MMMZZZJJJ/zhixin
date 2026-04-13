@@ -70,12 +70,26 @@ const MAP_CITY_FALLBACK_POINTS = {
     '新疆': { lat: 43.7930, lng: 87.6271, zoom: 5 },
     '西藏': { lat: 29.6475, lng: 91.1172, zoom: 6 }
 };
-let mapCityPanelState = { tab: 'province', filter: '', initial: '鍏ㄩ儴', current: '鍖椾含' };
+let mapCityPanelState = { tab: 'province', filter: '', initial: '全部', current: '北京' };
 
 let map, marker;
 let mapBaseLayer;
 let mapReadyTimerId = null;
+let mapBaseLayerAttached = false;
+let mapBaseLayerScheduled = false;
 const mapGeocodeCache = new Map();
+const MAP_CITY_MOJIBAKE_ALIAS = {
+    '镶愬仓': '银川',
+    '鍖椾含': '北京',
+    '涓婃捣': '上海',
+    '骞垮窞': '广州',
+    '娣卞湷': '深圳',
+    '鏉窞': '杭州',
+    '鍗椾含': '南京',
+    '姝︽眽': '武汉',
+    '鎴愰兘': '成都',
+    '瑗垮畨': '西安'
+};
 
 function markMapReady() {
     if (mapReadyTimerId) {
@@ -111,9 +125,98 @@ function ensureCountryLabelsForMap() {
     }
 }
 
+function getKnownMapCityNames() {
+    const cityNames = new Set(MAP_HOT_CITY_NAMES);
+    Object.keys(MAP_CITY_FALLBACK_POINTS).forEach(function(name) {
+        cityNames.add(name);
+    });
+    MAP_PROVINCE_CITY_GROUPS.forEach(function(group) {
+        cityNames.add(group.province);
+        group.cities.forEach(function(cityName) {
+            cityNames.add(cityName);
+        });
+    });
+    return cityNames;
+}
+
+function sanitizeMapCityName(value) {
+    const raw = String(value || '').trim();
+    if (!raw) {
+        return '北京';
+    }
+    if (MAP_CITY_MOJIBAKE_ALIAS[raw]) {
+        return MAP_CITY_MOJIBAKE_ALIAS[raw];
+    }
+    return getKnownMapCityNames().has(raw) ? raw : '北京';
+}
+
+function attachMapBaseLayer() {
+    if (!map || mapBaseLayerAttached) {
+        return;
+    }
+    mapBaseLayerAttached = true;
+
+    mapBaseLayer = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+        subdomains: ['1', '2', '3', '4'],
+        maxZoom: 18,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        keepBuffer: 1,
+        zoomOffset: 0
+    }).addTo(map);
+
+    mapBaseLayer.once('load', function() {
+        markMapReady();
+        window.setTimeout(function() {
+            if (map) {
+                map.invalidateSize(false);
+            }
+        }, 80);
+    });
+
+    mapReadyTimerId = window.setTimeout(markMapReady, 2400);
+}
+
+function scheduleMapBaseLayerAttach(mapContainer) {
+    if (mapBaseLayerScheduled) {
+        return;
+    }
+    mapBaseLayerScheduled = true;
+
+    const startAttach = function() {
+        attachMapBaseLayer();
+    };
+
+    const attachImmediately = function() {
+        startAttach();
+        if (!mapContainer) {
+            return;
+        }
+        mapContainer.removeEventListener('pointerdown', attachImmediately);
+        mapContainer.removeEventListener('wheel', attachImmediately);
+        mapContainer.removeEventListener('touchstart', attachImmediately);
+    };
+
+    if (mapContainer) {
+        mapContainer.addEventListener('pointerdown', attachImmediately, { passive: true, once: true });
+        mapContainer.addEventListener('wheel', attachImmediately, { passive: true, once: true });
+        mapContainer.addEventListener('touchstart', attachImmediately, { passive: true, once: true });
+    }
+
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(startAttach, { timeout: 1600 });
+        return;
+    }
+
+    window.setTimeout(startAttach, 900);
+}
+
 // 鍒濆鍖栧湴鍥?
 function initMap() {
     if (map) {
+        if (!mapBaseLayerAttached) {
+            attachMapBaseLayer();
+        }
         markMapReady();
         window.setTimeout(function() {
             map.invalidateSize(false);
@@ -133,20 +236,9 @@ function initMap() {
         fadeAnimation: false,
         markerZoomAnimation: false,
         inertia: false,
-        wheelDebounceTime: 80
-    }).setView([39.914885, 116.403874], 10);
-
-    // 楂樺痉鍦板浘鐭㈤噺搴曞浘
-    mapBaseLayer = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
-        subdomains: ['1', '2', '3', '4'],
-        maxZoom: 18,
-        updateWhenIdle: true,
-        updateWhenZooming: false,
-        keepBuffer: 1
-    }).addTo(map);
-
-    mapBaseLayer.once('load', markMapReady);
-    mapReadyTimerId = window.setTimeout(markMapReady, 1500);
+        wheelDebounceTime: 100,
+        zoomSnap: 0.5
+    }).setView([39.914885, 116.403874], 9.5);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -158,6 +250,7 @@ function initMap() {
         updateData(e.latlng.lat, e.latlng.lng);
     });
     initMapCitySelector();
+    scheduleMapBaseLayerAttach(mapContainer);
 }
 
 // 鏇存柊鏁版嵁閫昏緫
@@ -177,7 +270,7 @@ function initMapCitySelector() {
 
     if (!mapCityPanelState.current) {
         const currentLabel = document.getElementById('mapCityLabel');
-        mapCityPanelState.current = currentLabel ? String(currentLabel.textContent || '').trim() || '鍖椾含' : '鍖椾含';
+        mapCityPanelState.current = sanitizeMapCityName(currentLabel ? currentLabel.textContent : '北京');
     }
 
     syncMapSearchKeyword(legacyInput ? legacyInput.value : searchInput.value);
@@ -243,7 +336,7 @@ function initMapCitySelector() {
                 return;
             }
             mapCityPanelState.tab = nextTab;
-            mapCityPanelState.initial = '鍏ㄩ儴';
+            mapCityPanelState.initial = '全部';
             renderMapCityDropdown();
         });
     });
@@ -327,7 +420,7 @@ function renderMapCityInitials() {
 
     initialsContainer.querySelectorAll('[data-city-initial]').forEach(function(button) {
         button.addEventListener('click', function() {
-            mapCityPanelState.initial = button.getAttribute('data-city-initial') || '鍏ㄩ儴';
+            mapCityPanelState.initial = button.getAttribute('data-city-initial') || '全部';
             renderMapCityList();
             renderMapCityInitials();
         });
@@ -395,10 +488,10 @@ function renderMapCityListByInitial(container, keyword) {
     const groups = [];
 
     MAP_CITY_INITIALS.forEach(function(initial) {
-        if (initial === '鍏ㄩ儴') {
+        if (initial === '全部') {
             return;
         }
-        if (mapCityPanelState.initial !== '鍏ㄩ儴' && mapCityPanelState.initial !== initial) {
+        if (mapCityPanelState.initial !== '全部' && mapCityPanelState.initial !== initial) {
             return;
         }
 
@@ -444,7 +537,7 @@ function bindMapCityLinks(container) {
 }
 
 function selectMapCity(cityName) {
-    const nextCityName = String(cityName || '').trim();
+    const nextCityName = sanitizeMapCityName(cityName);
     if (!nextCityName || !map) {
         return;
     }
@@ -466,7 +559,7 @@ function selectMapCity(cityName) {
 }
 
 function updateMapCityLabel() {
-    const cityName = String(mapCityPanelState.current || '鍖椾含').trim() || '鍖椾含';
+    const cityName = sanitizeMapCityName(mapCityPanelState.current);
     const cityLabel = document.getElementById('mapCityLabel');
     const currentCity = document.getElementById('mapCurrentCityName');
     if (cityLabel) {
@@ -858,7 +951,7 @@ async function fetchWithTimeout(url, options, timeoutMs) {
 function resetAll() {
     document.getElementById('lat_input').value = '';
     document.getElementById('lng_input').value = '';
-    document.getElementById('res_pos').innerText = '鐐瑰嚮鍦板浘鑾峰彇';
+    document.getElementById('res_pos').innerText = '点击地图获取';
     document.getElementById('res_deg').innerText = '--';
     document.getElementById('res_dms').innerText = '--';
     if (marker) map.removeLayer(marker);
@@ -873,8 +966,11 @@ function resetAll() {
         filterInput.value = '';
     }
     syncMapSearchKeyword('');
+    mapCityPanelState.current = '北京';
+    updateMapCityLabel();
     map.setView([39.914885, 116.403874], 10);
 }
+
 
 
 

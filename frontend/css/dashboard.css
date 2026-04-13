@@ -8,7 +8,7 @@
 body {
     padding: 0px;
     margin: 0px;
-    font-family: "寰蒋闆呴粦";
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
 }
 
 html,
@@ -242,6 +242,7 @@ ol {
     background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 .12rem .32rem rgba(12, 27, 54, 0.22);
     overflow: hidden;
+    z-index: 9999;
 }
 
 .map-city-dropdown.show {
@@ -559,7 +560,9 @@ ol {
 }
 
 .addr-search-row .map-city-trigger {
-    min-width: 1.28rem;
+    width: 2.08rem;
+    min-width: 2.08rem;
+    max-width: 2.08rem;
     height: .45rem;
     padding: 0 .14rem;
     border: 1px solid #55bcd4;
@@ -570,29 +573,43 @@ ol {
     box-shadow: none;
     justify-content: space-between;
     white-space: nowrap;
+    overflow: hidden;
+}
+
+.addr-search-row .map-city-trigger span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .addr-search-row .map-city-dropdown {
     left: auto;
     right: 0;
     top: calc(100% + .08rem);
-    width: min(5.2rem, 82vw);
-    max-height: 4.8rem;
+    width: min(6.25rem, calc(100vw - .6rem));
+    min-width: 5.8rem;
+    max-height: min(5.1rem, 70vh);
     z-index: 9999;
+    overflow: auto;
 }
 
 .addr-search-row .map-city-tabs {
     flex-wrap: wrap;
     gap: .08rem;
+    align-items: center;
 }
 
 .addr-search-row .map-city-search-box {
     margin-left: 0;
     width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
 }
 
 .addr-search-row .map-city-list {
-    max-height: 2.6rem;
+    max-height: 2.8rem;
+    min-height: 2.05rem;
+    overflow: auto;
 }
 
 /* 鎸夐挳缁?*/
