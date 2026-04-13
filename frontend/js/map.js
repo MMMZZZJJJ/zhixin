@@ -150,34 +150,11 @@ function sanitizeMapCityName(value) {
     return getKnownMapCityNames().has(raw) ? raw : '北京';
 }
 
-function positionMapCityDropdown(trigger, dropdown) {
-    if (!trigger || !dropdown || !dropdown.classList.contains('show')) {
-        return;
-    }
-    const rect = trigger.getBoundingClientRect();
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-    const dropdownWidth = Math.min(Math.max(560, rect.width), Math.max(320, viewportWidth - 24));
-    const left = Math.max(12, Math.min(rect.right - dropdownWidth, viewportWidth - dropdownWidth - 12));
-    const top = Math.min(rect.bottom + 8, Math.max(12, viewportHeight - 420));
-
-    dropdown.style.left = `${left}px`;
-    dropdown.style.right = 'auto';
-    dropdown.style.top = `${top}px`;
-    dropdown.style.width = `${dropdownWidth}px`;
-    dropdown.style.maxWidth = 'calc(100vw - 24px)';
-}
-
 function closeMapCityDropdown(dropdown) {
     if (!dropdown) {
         return;
     }
     dropdown.classList.remove('show');
-    dropdown.style.left = '';
-    dropdown.style.right = '';
-    dropdown.style.top = '';
-    dropdown.style.width = '';
-    dropdown.style.maxWidth = '';
 }
 
 function attachMapBaseLayer() {
@@ -344,7 +321,6 @@ function initMapCitySelector() {
     trigger.addEventListener('click', function(e) {
         e.stopPropagation();
         dropdown.classList.toggle('show');
-        positionMapCityDropdown(trigger, dropdown);
     });
 
     if (closeBtn) {
@@ -375,14 +351,6 @@ function initMapCitySelector() {
     dropdown.addEventListener('click', function(e) {
         e.stopPropagation();
     });
-
-    window.addEventListener('resize', function() {
-        positionMapCityDropdown(trigger, dropdown);
-    });
-
-    window.addEventListener('scroll', function() {
-        closeMapCityDropdown(dropdown);
-    }, true);
 
     document.addEventListener('click', function(e) {
         if (!toolbar.contains(e.target)) {

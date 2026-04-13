@@ -508,6 +508,8 @@ ol {
 .content-left .panel:first-child {
     position: relative;
     z-index: 40;
+    overflow: visible;
+    contain: none;
 }
 
 .content-left .panel:first-child .panel-content {
@@ -557,6 +559,7 @@ ol {
 
 .addr-search-row .addr-city-selector {
     flex: 0 0 auto;
+    position: relative;
 }
 
 .addr-search-row .map-city-trigger {
@@ -583,13 +586,13 @@ ol {
 }
 
 .addr-search-row .map-city-dropdown {
-    position: fixed;
-    left: 12px;
+    position: absolute;
+    left: -2.8rem;
     right: auto;
-    top: 12px;
-    width: min(6.25rem, calc(100vw - .6rem));
-    min-width: min(5.8rem, calc(100vw - .6rem));
-    max-height: min(5.1rem, 70vh);
+    top: calc(100% + .08rem);
+    width: min(7.8rem, calc(100vw - .8rem));
+    min-width: 6.8rem;
+    max-height: min(5.6rem, 74vh);
     z-index: 9999;
     overflow: auto;
 }
@@ -608,8 +611,8 @@ ol {
 }
 
 .addr-search-row .map-city-list {
-    max-height: 2.8rem;
-    min-height: 2.05rem;
+    max-height: 3.2rem;
+    min-height: 2.4rem;
     overflow: auto;
 }
 
