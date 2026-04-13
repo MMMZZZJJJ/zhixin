@@ -1,6 +1,6 @@
-﻿/* 涓诲叆鍙ｆ枃浠?- 鍒濆鍖栧簲鐢?*/
+﻿/* 主入口文件 - 初始化应用 */
 
-// 椤甸潰鍔犺浇瀹屾垚鍚庡垵濮嬪寲
+// 页面加载完成后初始化
 let dashboardBootstrapped = false;
 let mapInitScheduled = false;
 let orderScriptsWarmupScheduled = false;
@@ -172,3 +172,5 @@ if (document.readyState === 'loading') {
 } else {
     bootstrapDashboard();
 }
+
+

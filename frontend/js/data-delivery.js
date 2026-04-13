@@ -1,9 +1,9 @@
-/* 数据交付模块 - 6ba20d8a接口 */
+﻿/* 数据交付模块 */
 
-// 查询交付数据
 async function queryDataDelivery() {
     const btn = document.getElementById('btn-data-delivery');
     if (!btn) return;
+
     const originalText = btn.innerText;
     btn.innerText = '查询中...';
     btn.disabled = true;
@@ -18,6 +18,7 @@ async function queryDataDelivery() {
         if (Object.keys(headers).length > 0) {
             requestOptions.headers = headers;
         }
+
         const requester = typeof authFetch === 'function' ? authFetch : fetch;
         const response = await requester(apiUrl, requestOptions);
 
@@ -26,25 +27,25 @@ async function queryDataDelivery() {
         }
 
         const data = await response.json();
-        
-        // 兼容接口返回单个对象或数组的情况（规范化为数组处理）
         const dataList = Array.isArray(data) ? data : [data];
-        
         showDeliveryModal(dataList);
-
     } catch (error) {
-        alert(`交付数据查询失败：${error.message}\n\n可能原因：\n1. 网络连接问题\n2. 接口服务未启动\n3. 后端未配置跨域响应头（Access-Control-Allow-Origin）`);
+        alert(
+            `交付数据查询失败：${error.message}\n\n` +
+            `可能原因：\n` +
+            `1. 网络连接问题\n` +
+            `2. 接口服务未启动\n` +
+            `3. 后端未配置跨域响应头（Access-Control-Allow-Origin）`
+        );
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
     }
 }
 
-// 显示交付数据弹窗
 function showDeliveryModal(dataList) {
     const modalBody = document.getElementById('deliveryModalBody');
-    
-    // 检查数据是否有效（如果没有数据或者第一个对象的 01-SourceName 为空）
+
     if (!dataList || dataList.length === 0 || !dataList[0]['01-SourceName']) {
         modalBody.innerHTML = `
             <div class="no-result">
@@ -59,11 +60,11 @@ function showDeliveryModal(dataList) {
                 <p style="color: #e6a23c; font-size: 12px; margin-top: 5px;">⚠️ 注意：数据提取链接有效期为 24 小时</p>
             </div>
         `;
-        
+
         dataList.forEach((item, index) => {
             const sourceName = item['01-SourceName'] || '未知卫星';
             const obsDataPay = item['02-ObsDataPay'] || '暂无提取信息';
-            
+
             html += `
                 <div class="seat-card">
                     <h3>交付数据 ${index + 1}</h3>
@@ -81,39 +82,38 @@ function showDeliveryModal(dataList) {
                 </div>
             `;
         });
+
         modalBody.innerHTML = html;
     }
-    
+
     document.getElementById('deliveryModal').style.display = 'block';
 }
 
-// 关闭弹窗
 function closeDeliveryModal() {
     document.getElementById('deliveryModal').style.display = 'none';
 }
 
-// 复制到剪贴板功能
 function copyDeliveryInfo(text) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(() => {
             alert('✅ 下载信息已复制到剪贴板！');
-        }).catch(err => {
+        }).catch(() => {
             alert('❌ 复制失败，请手动选中复制。');
         });
-    } else {
-        // 兼容较老的浏览器
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-            document.execCommand('copy');
-            alert('✅ 下载信息已复制到剪贴板！');
-        } catch (err) {
-            alert('❌ 复制失败，请手动选中复制。');
-        }
-        document.body.removeChild(textarea);
+        return;
     }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        alert('✅ 下载信息已复制到剪贴板！');
+    } catch (err) {
+        alert('❌ 复制失败，请手动选中复制。');
+    }
+    document.body.removeChild(textarea);
 }
 
 function escapeForSingleQuotedAttr(text) {
@@ -124,7 +124,6 @@ function escapeForSingleQuotedAttr(text) {
         .replace(/\n/g, '\\n');
 }
 
-// 点击弹窗外部关闭 (通过事件委托统一处理，避免覆盖其他文件的 window.onclick)
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('deliveryModal');
     if (event.target === modal) {

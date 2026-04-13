@@ -1,26 +1,18 @@
-/* 任务提交模块 - 9608接口 */
+﻿/* 任务提交模块 */
 
-// 提交成像任务
 async function submitTask(seatData) {
-    // console.log('submitTask 函数被调用');
-    // console.log('接收到的数据：', seatData);
-    
-    // 获取数据
     const lng = pickSeatFieldValue(seatData, ['02-Longitude', 'Longitude', 'longitude', 'Lng', 'lng']);
     const lat = pickSeatFieldValue(seatData, ['03-Latitude', 'Latitude', 'latitude', 'Lat', 'lat']);
     const centralityTime = pickSeatFieldValue(seatData, ['04-CentralityTime', 'CentralityTime', 'centralityTime', 'CenterTime', 'centerTime']);
     const selectedSourceName = pickSeatFieldValue(seatData, ['01-SourceName', '01-SourcName', 'SourceName', 'SourcName', 'sourceName', 'satelliteName', 'satName']);
-    
+
     const imagingModeValue = pickSeatFieldValue(seatData, ['05-ImagingMode', 'ImagingMode', 'imagingMode', 'Mode', 'mode']);
     const modeCodeList = normalizeImagingModeCodeList(imagingModeValue);
-    const rawImagingMode = modeCodeList.length > 0 ? modeCodeList[0] : '';
     const imagingModeText = formatImagingModeText(imagingModeValue);
-    
-    // 显示自定义确认弹窗
+
     showConfirmModal(seatData, lng, lat, centralityTime, imagingModeText, modeCodeList, selectedSourceName);
 }
 
-// 显示确认弹窗
 function showConfirmModal(seatData, lng, lat, centralityTime, imagingModeText, modeCodeList, selectedSourceName) {
     const confirmModalBody = document.getElementById('confirmModalBody');
     const modeSelectHtml = modeCodeList.length > 1
@@ -35,7 +27,7 @@ function showConfirmModal(seatData, lng, lat, centralityTime, imagingModeText, m
             </div>
         `
         : '';
-    
+
     const html = `
         <div class="confirm-info-item">
             <span class="confirm-info-label">卫星名称：</span>
@@ -55,7 +47,7 @@ function showConfirmModal(seatData, lng, lat, centralityTime, imagingModeText, m
             <span class="confirm-info-value">${lng}, ${lat}</span>
         </div>
         <div class="confirm-info-item">
-            <span class="confirm-info-label">上注时间：</span>
+            <span class="confirm-info-label">最早上传时间：</span>
             <span class="confirm-info-value">${pickSeatFieldValue(seatData, ['07-DirectiveUpload', 'DirectiveUpload', 'directiveUpload', 'UploadTime', 'uploadTime']) || '未知'}</span>
         </div>
         <div class="confirm-info-item">
@@ -74,11 +66,10 @@ function showConfirmModal(seatData, lng, lat, centralityTime, imagingModeText, m
             <p>• 请确认信息无误后再提交</p>
         </div>
     `;
-    
+
     confirmModalBody.innerHTML = html;
     document.getElementById('confirmModal').style.display = 'block';
-    
-    // 绑定确定按钮事件
+
     document.getElementById('confirmSubmitBtn').onclick = function() {
         const payTime = document.getElementById('payTimeSelect').value;
         const imagingModeSelect = document.getElementById('imagingModeSelect');
@@ -88,12 +79,10 @@ function showConfirmModal(seatData, lng, lat, centralityTime, imagingModeText, m
     };
 }
 
-// 关闭确认弹窗
 function closeConfirmModal() {
     document.getElementById('confirmModal').style.display = 'none';
 }
 
-// 执行任务提交
 async function doSubmitTask(lng, lat, centralityTime, imagingMode, payTime, selectedSourceName) {
     try {
         const taskPlanningConfig = window.APP_CONFIG?.api?.taskPlanning || {};
@@ -112,31 +101,19 @@ async function doSubmitTask(lng, lat, centralityTime, imagingMode, payTime, sele
         if (Object.keys(headers).length > 0) {
             requestOptions.headers = headers;
         }
-        
-        // console.log("提交任务接口：", apiUrl);
-        // console.log("提交参数：", {
-        //     Longitude: lng,
-        //     Latitude: lat,
-        //     CentralityTime: centralityTime,
-        //     ImagingMode: imagingMode
-        // });
-        
-        // 调用接口
+
         const requester = typeof authFetch === 'function' ? authFetch : fetch;
         const response = await requester(apiUrl, requestOptions);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP错误: ${response.status}`);
         }
-        
+
         const responseText = await response.text();
         const result = parseTaskPlanningResult(responseText);
         const taskSourceName = selectedSourceName || pickSeatFieldValue(result, ['01-SourceName', '01-SourcName', 'SourceName', 'SourcName', 'sourceName', 'satelliteName']) || '未知';
-        // console.log("任务提交结果：", result);
-        
-        // 检查结果
+
         if (Number(result['04-ConditionCode']) === 1) {
-            // 成功
             alert(
                 `✅ 任务提交成功！\n\n` +
                 `卫星名称：${taskSourceName}\n` +
@@ -146,7 +123,6 @@ async function doSubmitTask(lng, lat, centralityTime, imagingMode, payTime, sele
                 `请等待卫星拍摄，稍后可查看成像结果。`
             );
         } else {
-            // 失败
             alert(
                 `❌ 任务规划失败\n\n` +
                 `可能原因：\n` +
@@ -157,15 +133,13 @@ async function doSubmitTask(lng, lat, centralityTime, imagingMode, payTime, sele
                 `建议选择其他席位重试。`
             );
         }
-        
     } catch (error) {
-        // console.error("任务提交失败：", error);
         alert(
             `任务提交失败：${error.message}\n\n` +
             `可能原因：\n` +
             `1. 网络连接问题\n` +
             `2. 接口服务未启动（${window.APP_CONFIG?.api?.taskPlanning?.url || '/api/task-planning'}）\n` +
-            `3. 跨域限制（需要后端配置CORS）\n\n` +
+            `3. 跨域限制（需要后端配置 CORS）\n\n` +
             `请检查网络连接或联系技术支持。`
         );
     }
@@ -189,7 +163,7 @@ function normalizeImagingModeCodeList(mode) {
     }
     const modeRawList = Array.isArray(mode)
         ? mode
-        : String(mode).split(/[、,，/]/).map(item => item.trim()).filter(Boolean);
+        : String(mode).split(/[、,，]/).map(item => item.trim()).filter(Boolean);
     const modeMap = {
         '1': '1',
         '2': '2',
@@ -218,9 +192,9 @@ function formatImagingModeText(mode) {
         return '未知';
     }
     const value = String(mode).trim();
-    if (/[、,，/]/.test(value)) {
+    if (/[、,，]/.test(value)) {
         return value
-            .split(/[、,，/]/)
+            .split(/[、,，]/)
             .map(item => item.trim())
             .filter(Boolean)
             .map(item => formatImagingModeText(item))

@@ -218,7 +218,7 @@ function scheduleMapBaseLayerAttach(mapContainer) {
     window.setTimeout(startAttach, 900);
 }
 
-// 鍒濆鍖栧湴鍥?
+// 初始化地图
 function initMap() {
     if (map) {
         if (!mapBaseLayerAttached) {
@@ -249,7 +249,7 @@ function initMap() {
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // 娣诲姞鍥藉鏍囨敞锛堝鏋?country-labels.js 宸插姞杞斤級
+    // 添加国家标注（如果已启用 country-labels.js）
     ensureCountryLabelsForMap();
 
     // 鍦板浘鐐瑰嚮浜嬩欢
@@ -478,7 +478,7 @@ function renderMapCityListByProvince(container, keyword) {
         );
     });
 
-    container.innerHTML = sections.length > 0 ? sections.join('') : '<div class="map-city-empty">鏈壘鍒板尮閰嶇殑鍩庡競鎴栫渷浠?/div>';
+    container.innerHTML = sections.length > 0 ? sections.join('') : '<div class="map-city-empty">未找到匹配的城市或省份</div>';
     bindMapCityLinks(container);
 }
 
@@ -525,7 +525,7 @@ function renderMapCityListByInitial(container, keyword) {
         );
     });
 
-    container.innerHTML = groups.length > 0 ? groups.join('') : '<div class="map-city-empty">鏈壘鍒板尮閰嶇殑鍩庡競</div>';
+    container.innerHTML = groups.length > 0 ? groups.join('') : '<div class="map-city-empty">未找到匹配的城市</div>';
     bindMapCityLinks(container);
 }
 
@@ -581,22 +581,22 @@ function updateData(lat, lng) {
     lat = parseFloat(lat).toFixed(6);
     lng = parseFloat(lng).toFixed(6);
 
-    // 1. 鏇存柊杈撳叆妗?
+    // 1. 更新输入框
     document.getElementById('lat_input').value = lat;
     document.getElementById('lng_input').value = lng;
 
-    // 2. 鏇存柊鏍囪
+    // 2. 更新标记
     if (marker) map.removeLayer(marker);
     marker = L.marker([lat, lng]).addTo(map);
     map.panTo([lat, lng]);
 
-    // 3. 濉厖琛ㄦ牸鍩虹淇℃伅
+    // 3. 填充表格基础信息
     document.getElementById('res_pos').innerText = `${lng}, ${lat}`;
-    document.getElementById('res_deg').innerText = `${lng}掳, ${lat}掳`;
+    document.getElementById('res_deg').innerText = `${lng}°, ${lat}°`;
     document.getElementById('res_dms').innerText = `${toDMS(lng, 'lng')}, ${toDMS(lat, 'lat')}`;
 }
 
-// 鎵嬪姩杈撳叆瀹氫綅
+// 手动输入定位
 function manualLocate() {
     const lat = document.getElementById('lat_input').value;
     const lng = document.getElementById('lng_input').value;
@@ -644,7 +644,7 @@ async function searchAddress() {
         map.setZoom(13);
         updateData(lat, lng);
     } catch (error) {
-        alert(`鍦板潃鎼滅储澶辫触锛?{error.message || '璇风◢鍚庨噸璇?}`);
+        alert(`地址搜索失败：${error.message || '请稍后重试'}`);
     }
 }
 
@@ -977,6 +977,8 @@ function resetAll() {
     updateMapCityLabel();
     map.setView([39.914885, 116.403874], 10);
 }
+
+
 
 
 
