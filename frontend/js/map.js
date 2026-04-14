@@ -792,6 +792,30 @@ function findBuiltinPlacePointByKeyword(keyword) {
     if (!normalizedKeyword) {
         return null;
     }
+    const worldCityAliasMap = (typeof window !== 'undefined' && window.worldCityAliasMap) ? window.worldCityAliasMap : null;
+    const worldCityPoints = (typeof window !== 'undefined' && Array.isArray(window.worldCityPoints)) ? window.worldCityPoints : null;
+    if (worldCityPoints && worldCityPoints.length > 0) {
+        const mappedWorldCityName = worldCityAliasMap && worldCityAliasMap[normalizedKeyword]
+            ? worldCityAliasMap[normalizedKeyword]
+            : null;
+        if (mappedWorldCityName) {
+            const matchedWorldCity = worldCityPoints.find(function(city) {
+                return city.name === mappedWorldCityName;
+            });
+            if (matchedWorldCity) {
+                return { lat: matchedWorldCity.lat, lng: matchedWorldCity.lng, zoom: matchedWorldCity.zoom || 10 };
+            }
+        }
+        const directWorldCityMatch = worldCityPoints.find(function(city) {
+            return normalizeKeyword(city.name) === normalizedKeyword
+                || (Array.isArray(city.aliases) && city.aliases.some(function(alias) {
+                    return normalizeKeyword(alias) === normalizedKeyword;
+                }));
+        });
+        if (directWorldCityMatch) {
+            return { lat: directWorldCityMatch.lat, lng: directWorldCityMatch.lng, zoom: directWorldCityMatch.zoom || 10 };
+        }
+    }
     const placeMap = {
         '北京': { lat: 39.9042, lng: 116.4074, zoom: 10 },
         '上海': { lat: 31.2304, lng: 121.4737, zoom: 10 },
@@ -1002,6 +1026,7 @@ function resetAll() {
     updateMapCityLabel();
     map.setView([39.914885, 116.403874], 10);
 }
+
 
 
 

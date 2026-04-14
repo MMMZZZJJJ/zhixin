@@ -40,7 +40,8 @@ function updateLabelsVisibility(map) {
         if (!country) {
             return;
         }
-        if (currentZoom >= country.zoom - 2) {
+        const labelZoom = Number(country.labelZoom || country.zoom || 6);
+        if (currentZoom >= labelZoom) {
             if (!map.hasLayer(marker)) {
                 marker.addTo(map);
             }
