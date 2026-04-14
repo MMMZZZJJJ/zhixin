@@ -632,7 +632,53 @@ function updateMapCityLabel() {
     }
 }
 
-function updateData(lat, lng) {
+function escapeMapLabelHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getWorldCityEnglishName(city) {
+    if (!city || !Array.isArray(city.aliases)) {
+        return '';
+    }
+    const englishAlias = city.aliases.find(function(alias) {
+        return /^[A-Za-z][A-Za-z\s.'-]*$/.test(String(alias || '').trim());
+    });
+    if (!englishAlias) {
+        return '';
+    }
+    return String(englishAlias)
+        .trim()
+        .split(/\s+/)
+        .map(function(part) {
+            return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+        })
+        .join(' ');
+}
+
+function bindForeignCityTooltip(meta) {
+    if (!marker || !meta || !meta.isForeignCity || !meta.nameZh || !meta.nameEn) {
+        return;
+    }
+    marker.bindTooltip(
+        '<div class="map-foreign-city-label">'
+        + `<div class="map-foreign-city-label-zh">${escapeMapLabelHtml(meta.nameZh)}</div>`
+        + `<div class="map-foreign-city-label-en">${escapeMapLabelHtml(meta.nameEn)}</div>`
+        + '</div>',
+        {
+            permanent: true,
+            direction: 'bottom',
+            offset: [0, 14],
+            className: 'map-foreign-city-tooltip'
+        }
+    );
+}
+
+function updateData(lat, lng, meta = null) {
     lat = parseFloat(lat).toFixed(6);
     lng = parseFloat(lng).toFixed(6);
     updateMapBaseLayerForLocation(Number(lat), Number(lng));
@@ -644,6 +690,7 @@ function updateData(lat, lng) {
     // 2. 更新标记
     if (marker) map.removeLayer(marker);
     marker = L.marker([lat, lng]).addTo(map);
+    bindForeignCityTooltip(meta);
     map.panTo([lat, lng]);
 
     // 3. 填充表格基础信息
@@ -687,7 +734,7 @@ async function searchAddress() {
         const builtinPoint = findBuiltinPlacePointByKeyword(keyword);
         if (builtinPoint) {
             map.setZoom(Number(builtinPoint.zoom) || 9);
-            updateData(builtinPoint.lat, builtinPoint.lng);
+            updateData(builtinPoint.lat, builtinPoint.lng, builtinPoint);
             return;
         }
         const point = await geocodeAddress(keyword);
@@ -859,7 +906,14 @@ function findBuiltinPlacePointByKeyword(keyword) {
                 return city.name === mappedWorldCityName;
             });
             if (matchedWorldCity) {
-                return { lat: matchedWorldCity.lat, lng: matchedWorldCity.lng, zoom: matchedWorldCity.zoom || 10 };
+                return {
+                    lat: matchedWorldCity.lat,
+                    lng: matchedWorldCity.lng,
+                    zoom: matchedWorldCity.zoom || 9,
+                    isForeignCity: true,
+                    nameZh: matchedWorldCity.name,
+                    nameEn: getWorldCityEnglishName(matchedWorldCity)
+                };
             }
         }
         const directWorldCityMatch = worldCityPoints.find(function(city) {
@@ -869,7 +923,14 @@ function findBuiltinPlacePointByKeyword(keyword) {
                 }));
         });
         if (directWorldCityMatch) {
-            return { lat: directWorldCityMatch.lat, lng: directWorldCityMatch.lng, zoom: directWorldCityMatch.zoom || 10 };
+            return {
+                lat: directWorldCityMatch.lat,
+                lng: directWorldCityMatch.lng,
+                zoom: directWorldCityMatch.zoom || 9,
+                isForeignCity: true,
+                nameZh: directWorldCityMatch.name,
+                nameEn: getWorldCityEnglishName(directWorldCityMatch)
+            };
         }
     }
     const placeMap = {
