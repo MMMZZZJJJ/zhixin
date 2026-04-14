@@ -78,32 +78,14 @@ let mapReadyTimerId = null;
 let mapBaseLayerAttached = false;
 let mapBaseLayerScheduled = false;
 let mapBaseLayerMode = null;
-let mapGlobalBaseLayerSourceIndex = 0;
-let mapGlobalBaseLayerTileErrorCount = 0;
 const mapGeocodeCache = new Map();
-const MAP_GLOBAL_BASE_LAYER_SOURCES = [
-    {
-        name: 'Esri World Street Map',
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-        subdomains: [],
-        maxZoom: 19,
-        maxNativeZoom: 16
-    },
-    {
-        name: 'CartoDB Positron',
-        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        subdomains: ['a', 'b', 'c', 'd'],
-        maxZoom: 20,
-        maxNativeZoom: 19
-    },
-    {
-        name: 'OpenStreetMap',
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        subdomains: ['a', 'b', 'c'],
-        maxZoom: 19,
-        maxNativeZoom: 19
-    }
-];
+const MAP_GLOBAL_BASE_LAYER = {
+    name: 'Esri World Street Map',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    subdomains: [],
+    maxZoom: 19,
+    maxNativeZoom: 16
+};
 const MAP_CITY_MOJIBAKE_ALIAS = {
     '镶愬仓': '银川',
     '鍖椾含': '北京',
@@ -194,53 +176,15 @@ function createChinaBaseLayer() {
     });
 }
 
-function createGlobalBaseLayer(sourceIndex = 0) {
-    const safeSourceIndex = MAP_GLOBAL_BASE_LAYER_SOURCES[sourceIndex] ? sourceIndex : 0;
-    const source = MAP_GLOBAL_BASE_LAYER_SOURCES[safeSourceIndex];
-    const layer = L.tileLayer(source.url, {
-        subdomains: source.subdomains,
-        maxZoom: source.maxZoom,
-        maxNativeZoom: source.maxNativeZoom,
+function createGlobalBaseLayer() {
+    return L.tileLayer(MAP_GLOBAL_BASE_LAYER.url, {
+        subdomains: MAP_GLOBAL_BASE_LAYER.subdomains,
+        maxZoom: MAP_GLOBAL_BASE_LAYER.maxZoom,
+        maxNativeZoom: MAP_GLOBAL_BASE_LAYER.maxNativeZoom,
         updateWhenIdle: true,
         updateWhenZooming: false,
         keepBuffer: 1
     });
-    layer.on('tileerror', function() {
-        if (!map || mapBaseLayerMode !== 'global' || mapBaseLayer !== layer) {
-            return;
-        }
-        mapGlobalBaseLayerTileErrorCount += 1;
-        if (mapGlobalBaseLayerTileErrorCount >= 1) {
-            switchGlobalBaseLayerSource(safeSourceIndex + 1);
-        }
-    });
-    return layer;
-}
-
-function switchGlobalBaseLayerSource(nextSourceIndex) {
-    if (!map || mapBaseLayerMode !== 'global') {
-        return;
-    }
-    if (!MAP_GLOBAL_BASE_LAYER_SOURCES[nextSourceIndex]) {
-        if (mapBaseLayer && map.hasLayer(mapBaseLayer)) {
-            map.removeLayer(mapBaseLayer);
-        }
-        mapBaseLayer = createChinaBaseLayer();
-        mapBaseLayerMode = 'china-fallback';
-        mapBaseLayerAttached = true;
-        mapBaseLayer.addTo(map);
-        bindBaseLayerReady(mapBaseLayer);
-        return;
-    }
-    if (mapBaseLayer && map.hasLayer(mapBaseLayer)) {
-        map.removeLayer(mapBaseLayer);
-    }
-    mapGlobalBaseLayerSourceIndex = nextSourceIndex;
-    mapGlobalBaseLayerTileErrorCount = 0;
-    mapBaseLayer = createGlobalBaseLayer(mapGlobalBaseLayerSourceIndex);
-    mapBaseLayerAttached = true;
-    mapBaseLayer.addTo(map);
-    bindBaseLayerReady(mapBaseLayer);
 }
 
 function isLikelyChinaLocation(lat, lng) {
@@ -278,12 +222,7 @@ function updateMapBaseLayerForLocation(lat, lng) {
         map.removeLayer(mapBaseLayer);
     }
 
-    if (nextMode === 'china') {
-        mapGlobalBaseLayerSourceIndex = 0;
-        mapGlobalBaseLayerTileErrorCount = 0;
-    }
-
-    mapBaseLayer = nextMode === 'china' ? createChinaBaseLayer() : createGlobalBaseLayer(mapGlobalBaseLayerSourceIndex);
+    mapBaseLayer = nextMode === 'china' ? createChinaBaseLayer() : createGlobalBaseLayer();
     mapBaseLayerMode = nextMode;
     mapBaseLayerAttached = true;
     mapBaseLayer.addTo(map);
