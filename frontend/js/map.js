@@ -735,6 +735,9 @@ function getCountryAliasKeyword(keyword) {
 }
 
 function getAvailableCountryLabels() {
+    if (typeof window !== 'undefined' && Array.isArray(window.countryRegionPoints)) {
+        return window.countryRegionPoints;
+    }
     if (typeof countryLabels !== 'undefined' && Array.isArray(countryLabels)) {
         return countryLabels;
     }
@@ -753,7 +756,10 @@ function findCountryPointByKeyword(keyword) {
     if (!normalizedKeyword) {
         return null;
     }
-    const aliasName = getCountryAliasKeyword(keyword);
+    const regionAliasMap = (typeof window !== 'undefined' && window.countryRegionAliasMap) ? window.countryRegionAliasMap : null;
+    const aliasName = regionAliasMap && regionAliasMap[normalizedKeyword]
+        ? regionAliasMap[normalizedKeyword]
+        : getCountryAliasKeyword(keyword);
     const exactMatch = labels.find((country) => normalizeKeyword(country.name) === normalizedKeyword);
     if (exactMatch) {
         return exactMatch;
@@ -763,6 +769,14 @@ function findCountryPointByKeyword(keyword) {
         if (aliasMatch) {
             return aliasMatch;
         }
+    }
+    const aliasListMatch = labels.find(function(country) {
+        return Array.isArray(country.aliases) && country.aliases.some(function(alias) {
+            return normalizeKeyword(alias) === normalizedKeyword;
+        });
+    });
+    if (aliasListMatch) {
+        return aliasListMatch;
     }
     if (normalizedKeyword.length >= 2) {
         const fuzzyMatch = labels.find((country) => normalizeKeyword(country.name).includes(normalizedKeyword));
