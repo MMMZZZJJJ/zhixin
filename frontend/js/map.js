@@ -217,6 +217,43 @@ function closeMapCityDropdown(dropdown) {
     dropdown.classList.remove('show');
 }
 
+function positionMapCityDropdown(trigger, dropdown) {
+    if (!trigger || !dropdown) {
+        return;
+    }
+
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1280;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+    const gap = 8;
+    const rect = trigger.getBoundingClientRect();
+    const targetWidth = Math.min(Math.max(rect.width + 360, 760), viewportWidth - 24);
+
+    dropdown.style.width = `${targetWidth}px`;
+    dropdown.style.minWidth = '0px';
+    dropdown.style.maxWidth = `${viewportWidth - 24}px`;
+
+    const spaceBelow = viewportHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const preferredHeight = Math.min(620, Math.max(360, viewportHeight * 0.68));
+    let availableHeight = spaceBelow;
+    let top = rect.bottom + gap;
+
+    if (spaceBelow < 320 && spaceAbove > spaceBelow) {
+        availableHeight = Math.max(260, spaceAbove - gap);
+        top = Math.max(gap, rect.top - availableHeight - gap);
+    } else {
+        availableHeight = Math.max(260, spaceBelow - gap);
+    }
+
+    dropdown.style.maxHeight = `${Math.min(preferredHeight, availableHeight)}px`;
+
+    const left = Math.max(gap, Math.min(rect.right - targetWidth, viewportWidth - targetWidth - gap));
+    dropdown.style.left = `${left}px`;
+    dropdown.style.top = `${Math.max(gap, top)}px`;
+    dropdown.style.right = 'auto';
+    dropdown.style.bottom = 'auto';
+}
+
 function createChinaBaseLayer() {
     return L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
         subdomains: ['1', '2', '3', '4'],
@@ -428,7 +465,11 @@ function initMapCitySelector() {
 
     trigger.addEventListener('click', function(e) {
         e.stopPropagation();
+        const willShow = !dropdown.classList.contains('show');
         dropdown.classList.toggle('show');
+        if (willShow) {
+            positionMapCityDropdown(trigger, dropdown);
+        }
     });
 
     if (closeBtn) {
@@ -479,6 +520,21 @@ function initMapCitySelector() {
             closeMapCityDropdown(dropdown);
         }
     });
+
+    window.addEventListener('resize', function() {
+        if (dropdown.classList.contains('show')) {
+            positionMapCityDropdown(trigger, dropdown);
+        }
+    });
+
+    const scrollHost = toolbar.closest('.content-left');
+    if (scrollHost) {
+        scrollHost.addEventListener('scroll', function() {
+            if (dropdown.classList.contains('show')) {
+                positionMapCityDropdown(trigger, dropdown);
+            }
+        });
+    }
 }
 
 function syncMapSearchKeyword(keyword) {
@@ -495,6 +551,7 @@ function syncMapSearchKeyword(keyword) {
 
 function renderMapCityDropdown() {
     const dropdown = document.getElementById('mapCityDropdown');
+    const trigger = document.getElementById('mapCityTrigger');
     const filterInput = document.getElementById('mapCityFilterInput');
     if (!dropdown) {
         return;
@@ -531,6 +588,10 @@ function renderMapCityDropdown() {
     renderMapCityInitials();
     renderMapCityList();
     updateMapCityLabel();
+
+    if (dropdown.classList.contains('show') && trigger) {
+        positionMapCityDropdown(trigger, dropdown);
+    }
 }
 
 function renderMapHotCities() {
