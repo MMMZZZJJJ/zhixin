@@ -86,19 +86,22 @@ const MAP_GLOBAL_BASE_LAYER_SOURCES = [
         name: 'OpenStreetMap',
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         subdomains: ['a', 'b', 'c'],
-        maxZoom: 19
+        maxZoom: 19,
+        maxNativeZoom: 19
     },
     {
         name: 'CartoDB Positron',
         url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         subdomains: ['a', 'b', 'c', 'd'],
-        maxZoom: 20
+        maxZoom: 20,
+        maxNativeZoom: 19
     },
     {
         name: 'Esri World Street Map',
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
         subdomains: [],
-        maxZoom: 19
+        maxZoom: 19,
+        maxNativeZoom: 16
     }
 ];
 const MAP_CITY_MOJIBAKE_ALIAS = {
@@ -197,6 +200,7 @@ function createGlobalBaseLayer(sourceIndex = 0) {
     const layer = L.tileLayer(source.url, {
         subdomains: source.subdomains,
         maxZoom: source.maxZoom,
+        maxNativeZoom: source.maxNativeZoom,
         updateWhenIdle: true,
         updateWhenZooming: false,
         keepBuffer: 1
