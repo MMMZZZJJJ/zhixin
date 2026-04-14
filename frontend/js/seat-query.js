@@ -1,6 +1,6 @@
-/* 席位查询模块 - 9069接口 */
+﻿/* 席位查询模块 - 9069接口 */
 
-const SEAT_PAGE_SIZE = 20;
+const SEAT_PAGE_SIZE = 50;
 let seatModalState = null;
 
 // 查询席位（下单）
@@ -119,54 +119,61 @@ function renderSeatModalPage() {
     const totalPages = Math.max(1, Math.ceil(totalSeats / SEAT_PAGE_SIZE));
     const currentPage = Math.min(Math.max(seatModalState.currentPage || 1, 1), totalPages);
     seatModalState.currentPage = currentPage;
+
     const startIndex = (currentPage - 1) * SEAT_PAGE_SIZE;
     const endIndex = Math.min(startIndex + SEAT_PAGE_SIZE, totalSeats);
     const pageItems = data.slice(startIndex, endIndex);
 
     let html = `
-        <div class="result-info">
+        <div class="result-info seat-result-info">
             <p><strong>经纬度：</strong>${lng}, ${lat}</p>
-            <p><strong>成像时间预测数量：</strong>共找到 ${seatCount} 个可拍摄时段</p>
+            <p><strong>预测结果：</strong>共找到 ${seatCount} 个可拍摄时段</p>
             <p><strong>当前分页：</strong>第 ${currentPage} / ${totalPages} 页，显示第 ${totalSeats === 0 ? 0 : startIndex + 1}-${endIndex} 条</p>
         </div>
+        <div class="seat-result-list">
+            <div class="seat-row seat-row-header">
+                <div class="seat-cell">序号</div>
+                <div class="seat-cell">卫星名称</div>
+                <div class="seat-cell seat-cell-time">中心时间</div>
+                <div class="seat-cell">成像模式</div>
+                <div class="seat-cell">侧摆位置</div>
+                <div class="seat-cell seat-cell-upload">最早上传时间</div>
+                <div class="seat-cell seat-cell-actions">操作</div>
+            </div>
     `;
 
     pageItems.forEach((item, index) => {
         const absoluteIndex = startIndex + index;
         const imagingModeText = formatSeatImagingMode(item['05-ImagingMode']);
         const sourceName = item['01-SourceName'] || item['01-SourcName'] || '未知';
-            
+        const centralityTime = item['04-CentralityTime'] || '未知';
+        const rollPosition = item['06-RollPosition'] || '未知';
+        const directiveUpload = item['07-DirectiveUpload'] || '未知';
+
         html += `
-            <div class="seat-card">
-                <h3>可拍摄时段 ${absoluteIndex + 1}</h3>
-                <div class="info-row">
-                    <span class="info-label">卫星名称：</span>
-                    <span class="info-value">${sourceName}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">中心时间：</span>
-                    <span class="info-value highlight">${item['04-CentralityTime'] || '未知'}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">成像模式：</span>
-                    <span class="info-value">${imagingModeText}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">侧摆位置：</span>
-                    <span class="info-value">${item['06-RollPosition'] || '未知'}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">最早指令上注时间：</span>
-                    <span class="info-value">${item['07-DirectiveUpload'] || '未知'}</span>
-                </div>
-                <div class="task-submit-box">
-                    <button class="btn btn-submit-task" data-index="${absoluteIndex}">
-                        提交成像任务
-                    </button>
+            <div class="seat-row">
+                <div class="seat-cell seat-cell-index">${absoluteIndex + 1}</div>
+                <div class="seat-cell" title="${sourceName}">${sourceName}</div>
+                <div class="seat-cell seat-cell-time" title="${centralityTime}">${centralityTime}</div>
+                <div class="seat-cell" title="${imagingModeText}">${imagingModeText}</div>
+                <div class="seat-cell" title="${rollPosition}">${rollPosition}</div>
+                <div class="seat-cell seat-cell-upload" title="${directiveUpload}">${directiveUpload}</div>
+                <div class="seat-cell seat-cell-actions">
+                    <button class="btn btn-submit-task-inline" data-index="${absoluteIndex}">提交任务</button>
                 </div>
             </div>
         `;
     });
+
+    if (pageItems.length === 0) {
+        html += `
+            <div class="seat-row seat-row-empty">
+                <div class="seat-empty-text">当前页暂无数据</div>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
 
     if (totalPages > 1) {
         html += buildSeatPaginationHtml(currentPage, totalPages);
@@ -175,9 +182,9 @@ function renderSeatModalPage() {
     modalBody.innerHTML = html;
     document.getElementById('resultModal').style.display = 'block';
 
-    const submitButtons = document.querySelectorAll('.btn-submit-task');
+    const submitButtons = document.querySelectorAll('.btn-submit-task-inline');
     submitButtons.forEach((button) => {
-        const index = parseInt(button.getAttribute('data-index'));
+        const index = parseInt(button.getAttribute('data-index'), 10);
         button.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -442,3 +449,4 @@ function readSeatCache(lng, lat) {
         return [];
     }
 }
+
