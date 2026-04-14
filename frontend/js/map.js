@@ -77,7 +77,30 @@ let mapBaseLayer;
 let mapReadyTimerId = null;
 let mapBaseLayerAttached = false;
 let mapBaseLayerScheduled = false;
+let mapBaseLayerMode = null;
+let mapGlobalBaseLayerSourceIndex = 0;
+let mapGlobalBaseLayerTileErrorCount = 0;
 const mapGeocodeCache = new Map();
+const MAP_GLOBAL_BASE_LAYER_SOURCES = [
+    {
+        name: 'OpenStreetMap',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        subdomains: ['a', 'b', 'c'],
+        maxZoom: 19
+    },
+    {
+        name: 'CartoDB Positron',
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        subdomains: ['a', 'b', 'c', 'd'],
+        maxZoom: 20
+    },
+    {
+        name: 'Esri World Street Map',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        subdomains: [],
+        maxZoom: 19
+    }
+];
 const MAP_CITY_MOJIBAKE_ALIAS = {
     '镶愬仓': '银川',
     '鍖椾含': '北京',
@@ -157,22 +180,65 @@ function closeMapCityDropdown(dropdown) {
     dropdown.classList.remove('show');
 }
 
-function attachMapBaseLayer() {
-    if (!map || mapBaseLayerAttached) {
-        return;
-    }
-    mapBaseLayerAttached = true;
-
-    mapBaseLayer = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+function createChinaBaseLayer() {
+    return L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
         subdomains: ['1', '2', '3', '4'],
         maxZoom: 18,
         updateWhenIdle: true,
         updateWhenZooming: false,
         keepBuffer: 1,
         zoomOffset: 0
-    }).addTo(map);
+    });
+}
 
-    mapBaseLayer.once('load', function() {
+function createGlobalBaseLayer(sourceIndex = 0) {
+    const safeSourceIndex = MAP_GLOBAL_BASE_LAYER_SOURCES[sourceIndex] ? sourceIndex : 0;
+    const source = MAP_GLOBAL_BASE_LAYER_SOURCES[safeSourceIndex];
+    const layer = L.tileLayer(source.url, {
+        subdomains: source.subdomains,
+        maxZoom: source.maxZoom,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        keepBuffer: 1
+    });
+    layer.on('tileerror', function() {
+        if (!map || mapBaseLayerMode !== 'global' || mapBaseLayer !== layer) {
+            return;
+        }
+        mapGlobalBaseLayerTileErrorCount += 1;
+        if (mapGlobalBaseLayerTileErrorCount >= 3 && safeSourceIndex < MAP_GLOBAL_BASE_LAYER_SOURCES.length - 1) {
+            switchGlobalBaseLayerSource(safeSourceIndex + 1);
+        }
+    });
+    return layer;
+}
+
+function switchGlobalBaseLayerSource(nextSourceIndex) {
+    if (!map || mapBaseLayerMode !== 'global' || !MAP_GLOBAL_BASE_LAYER_SOURCES[nextSourceIndex]) {
+        return;
+    }
+    if (mapBaseLayer && map.hasLayer(mapBaseLayer)) {
+        map.removeLayer(mapBaseLayer);
+    }
+    mapGlobalBaseLayerSourceIndex = nextSourceIndex;
+    mapGlobalBaseLayerTileErrorCount = 0;
+    mapBaseLayer = createGlobalBaseLayer(mapGlobalBaseLayerSourceIndex);
+    mapBaseLayerAttached = true;
+    mapBaseLayer.addTo(map);
+    bindBaseLayerReady(mapBaseLayer);
+}
+
+function isLikelyChinaLocation(lat, lng) {
+    return Number.isFinite(lat)
+        && Number.isFinite(lng)
+        && lat >= 3
+        && lat <= 54.5
+        && lng >= 73
+        && lng <= 136;
+}
+
+function bindBaseLayerReady(layer) {
+    layer.once('load', function() {
         markMapReady();
         window.setTimeout(function() {
             if (map) {
@@ -182,6 +248,41 @@ function attachMapBaseLayer() {
     });
 
     mapReadyTimerId = window.setTimeout(markMapReady, 2400);
+}
+
+function updateMapBaseLayerForLocation(lat, lng) {
+    if (!map) {
+        return;
+    }
+    const nextMode = isLikelyChinaLocation(Number(lat), Number(lng)) ? 'china' : 'global';
+    if (mapBaseLayer && mapBaseLayerMode === nextMode) {
+        return;
+    }
+
+    if (mapBaseLayer && map.hasLayer(mapBaseLayer)) {
+        map.removeLayer(mapBaseLayer);
+    }
+
+    if (nextMode === 'china') {
+        mapGlobalBaseLayerSourceIndex = 0;
+        mapGlobalBaseLayerTileErrorCount = 0;
+    }
+
+    mapBaseLayer = nextMode === 'china' ? createChinaBaseLayer() : createGlobalBaseLayer(mapGlobalBaseLayerSourceIndex);
+    mapBaseLayerMode = nextMode;
+    mapBaseLayerAttached = true;
+    mapBaseLayer.addTo(map);
+    bindBaseLayerReady(mapBaseLayer);
+}
+
+function attachMapBaseLayer() {
+    if (!map) {
+        return;
+    }
+    const center = typeof map.getCenter === 'function'
+        ? map.getCenter()
+        : { lat: 39.914885, lng: 116.403874 };
+    updateMapBaseLayerForLocation(Number(center.lat), Number(center.lng));
 }
 
 function scheduleMapBaseLayerAttach(mapContainer) {
@@ -580,6 +681,7 @@ function updateMapCityLabel() {
 function updateData(lat, lng) {
     lat = parseFloat(lat).toFixed(6);
     lng = parseFloat(lng).toFixed(6);
+    updateMapBaseLayerForLocation(Number(lat), Number(lng));
 
     // 1. 更新输入框
     document.getElementById('lat_input').value = lat;
