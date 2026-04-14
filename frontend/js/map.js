@@ -1,4 +1,4 @@
-﻿/* 鍦板浘鍔熻兘妯″潡 */
+﻿/* 地图功能模块 */
 
 const MAP_HOT_CITY_NAMES = ['全国', '北京', '上海', '广州', '深圳', '杭州', '南京', '武汉', '成都', '西安', '银川'];
 const MAP_PROVINCE_CITY_GROUPS = [
@@ -252,7 +252,7 @@ function initMap() {
     // 添加国家标注（如果已启用 country-labels.js）
     ensureCountryLabelsForMap();
 
-    // 鍦板浘鐐瑰嚮浜嬩欢
+    // 地图点击事件
     map.on('click', function(e) {
         updateData(e.latlng.lat, e.latlng.lng);
     });
@@ -734,8 +734,19 @@ function getCountryAliasKeyword(keyword) {
     return aliasMap[normalized] || null;
 }
 
+function getAvailableCountryLabels() {
+    if (typeof countryLabels !== 'undefined' && Array.isArray(countryLabels)) {
+        return countryLabels;
+    }
+    if (typeof window !== 'undefined' && Array.isArray(window.countryLabels)) {
+        return window.countryLabels;
+    }
+    return [];
+}
+
 function findCountryPointByKeyword(keyword) {
-    if (!Array.isArray(countryLabels) || countryLabels.length === 0) {
+    const labels = getAvailableCountryLabels();
+    if (labels.length === 0) {
         return null;
     }
     const normalizedKeyword = normalizeKeyword(keyword);
@@ -743,18 +754,18 @@ function findCountryPointByKeyword(keyword) {
         return null;
     }
     const aliasName = getCountryAliasKeyword(keyword);
-    const exactMatch = countryLabels.find((country) => normalizeKeyword(country.name) === normalizedKeyword);
+    const exactMatch = labels.find((country) => normalizeKeyword(country.name) === normalizedKeyword);
     if (exactMatch) {
         return exactMatch;
     }
     if (aliasName) {
-        const aliasMatch = countryLabels.find((country) => country.name === aliasName);
+        const aliasMatch = labels.find((country) => country.name === aliasName);
         if (aliasMatch) {
             return aliasMatch;
         }
     }
     if (normalizedKeyword.length >= 2) {
-        const fuzzyMatch = countryLabels.find((country) => normalizeKeyword(country.name).includes(normalizedKeyword));
+        const fuzzyMatch = labels.find((country) => normalizeKeyword(country.name).includes(normalizedKeyword));
         if (fuzzyMatch) {
             return fuzzyMatch;
         }
@@ -977,6 +988,8 @@ function resetAll() {
     updateMapCityLabel();
     map.setView([39.914885, 116.403874], 10);
 }
+
+
 
 
 
