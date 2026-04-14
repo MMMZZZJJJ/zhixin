@@ -83,11 +83,11 @@ let mapGlobalBaseLayerTileErrorCount = 0;
 const mapGeocodeCache = new Map();
 const MAP_GLOBAL_BASE_LAYER_SOURCES = [
     {
-        name: 'OpenStreetMap',
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        subdomains: ['a', 'b', 'c'],
+        name: 'Esri World Street Map',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        subdomains: [],
         maxZoom: 19,
-        maxNativeZoom: 19
+        maxNativeZoom: 16
     },
     {
         name: 'CartoDB Positron',
@@ -97,11 +97,11 @@ const MAP_GLOBAL_BASE_LAYER_SOURCES = [
         maxNativeZoom: 19
     },
     {
-        name: 'Esri World Street Map',
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-        subdomains: [],
+        name: 'OpenStreetMap',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        subdomains: ['a', 'b', 'c'],
         maxZoom: 19,
-        maxNativeZoom: 16
+        maxNativeZoom: 19
     }
 ];
 const MAP_CITY_MOJIBAKE_ALIAS = {
@@ -210,7 +210,7 @@ function createGlobalBaseLayer(sourceIndex = 0) {
             return;
         }
         mapGlobalBaseLayerTileErrorCount += 1;
-        if (mapGlobalBaseLayerTileErrorCount >= 3 && safeSourceIndex < MAP_GLOBAL_BASE_LAYER_SOURCES.length - 1) {
+        if (mapGlobalBaseLayerTileErrorCount >= 1) {
             switchGlobalBaseLayerSource(safeSourceIndex + 1);
         }
     });
@@ -218,7 +218,18 @@ function createGlobalBaseLayer(sourceIndex = 0) {
 }
 
 function switchGlobalBaseLayerSource(nextSourceIndex) {
-    if (!map || mapBaseLayerMode !== 'global' || !MAP_GLOBAL_BASE_LAYER_SOURCES[nextSourceIndex]) {
+    if (!map || mapBaseLayerMode !== 'global') {
+        return;
+    }
+    if (!MAP_GLOBAL_BASE_LAYER_SOURCES[nextSourceIndex]) {
+        if (mapBaseLayer && map.hasLayer(mapBaseLayer)) {
+            map.removeLayer(mapBaseLayer);
+        }
+        mapBaseLayer = createChinaBaseLayer();
+        mapBaseLayerMode = 'china-fallback';
+        mapBaseLayerAttached = true;
+        mapBaseLayer.addTo(map);
+        bindBaseLayerReady(mapBaseLayer);
         return;
     }
     if (mapBaseLayer && map.hasLayer(mapBaseLayer)) {
