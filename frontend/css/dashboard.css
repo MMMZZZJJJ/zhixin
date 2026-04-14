@@ -237,14 +237,37 @@ ol {
     position: absolute;
     top: calc(100% + .12rem);
     right: 0;
-    width: min(6.2rem, 70vw);
-    max-height: 5.4rem;
+    width: min(8.2rem, 82vw);
+    max-height: 6rem;
     padding: .22rem .22rem .18rem;
     border-radius: .08rem;
     background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 .12rem .32rem rgba(12, 27, 54, 0.22);
     overflow: hidden;
     z-index: 9999;
+}
+
+.map-city-scope-tabs {
+    display: flex;
+    gap: .1rem;
+    margin-bottom: .14rem;
+}
+
+.map-city-scope-tab {
+    min-width: 1rem;
+    height: .38rem;
+    padding: 0 .18rem;
+    border: 1px solid #d8dfea;
+    background: #fff;
+    color: #4d5d72;
+    font-size: .15rem;
+    cursor: pointer;
+}
+
+.map-city-scope-tab.active {
+    border-color: #2674ea;
+    color: #2674ea;
+    background: #f3f8ff;
 }
 
 .map-city-dropdown.show {
@@ -314,6 +337,7 @@ ol {
     align-items: center;
     gap: .12rem;
     margin: .18rem 0 .14rem;
+    flex-wrap: wrap;
 }
 
 .map-city-tab {
@@ -334,7 +358,7 @@ ol {
 
 .map-city-search-box {
     margin-left: auto;
-    width: 2.4rem;
+    width: 2.8rem;
     height: .42rem;
     border: 1px solid #d8dfea;
     border-radius: .04rem;
@@ -372,7 +396,7 @@ ol {
 }
 
 .map-city-list {
-    max-height: 3.28rem;
+    max-height: 3.75rem;
     overflow-y: auto;
     padding-right: .04rem;
 }
@@ -389,7 +413,7 @@ ol {
 }
 
 .map-city-group-title {
-    width: .72rem;
+    width: 1rem;
     flex-shrink: 0;
     color: #4d5d72;
     font-weight: 700;
@@ -411,6 +435,24 @@ ol {
     flex: 1;
     flex-wrap: wrap;
     gap: .1rem .14rem;
+    min-width: 0;
+}
+
+.map-city-group-global {
+    align-items: flex-start;
+}
+
+.map-city-group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(1.2rem, 1fr));
+    gap: .1rem .14rem;
+    width: 100%;
+}
+
+.map-city-link-wide {
+    text-align: left;
+    white-space: normal;
+    line-height: 1.45;
 }
 
 .map-city-empty {
@@ -565,9 +607,9 @@ ol {
 }
 
 .addr-search-row .map-city-trigger {
-    width: 2.08rem;
-    min-width: 2.08rem;
-    max-width: 2.08rem;
+    width: 2.32rem;
+    min-width: 2.32rem;
+    max-width: 2.32rem;
     height: .45rem;
     padding: 0 .14rem;
     border: 1px solid #55bcd4;
@@ -589,12 +631,12 @@ ol {
 
 .addr-search-row .map-city-dropdown {
     position: absolute;
-    left: -2.8rem;
+    left: -3.42rem;
     right: auto;
     top: calc(100% + .08rem);
-    width: min(7.8rem, calc(100vw - .8rem));
-    min-width: 6.8rem;
-    max-height: min(5.6rem, 74vh);
+    width: min(9.4rem, calc(100vw - .8rem));
+    min-width: 8.2rem;
+    max-height: min(6.2rem, 78vh);
     z-index: 9999;
     overflow: auto;
 }

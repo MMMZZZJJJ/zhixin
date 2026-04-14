@@ -1,6 +1,7 @@
 ﻿/* 地图功能模块 */
 
 const MAP_HOT_CITY_NAMES = ['全国', '北京', '上海', '广州', '深圳', '杭州', '南京', '武汉', '成都', '西安', '银川'];
+const MAP_GLOBAL_HOT_PLACE_NAMES = ['中国', '美国', '俄罗斯', '日本', '伊朗', '英国', '法国', '德国', '纽约', '东京', '莫斯科', '德黑兰'];
 const MAP_PROVINCE_CITY_GROUPS = [
     { province: '直辖市', cities: ['北京', '天津', '上海', '重庆'] },
     { province: '广东', cities: ['广州', '深圳'] },
@@ -70,7 +71,7 @@ const MAP_CITY_FALLBACK_POINTS = {
     '新疆': { lat: 43.7930, lng: 87.6271, zoom: 5 },
     '西藏': { lat: 29.6475, lng: 91.1172, zoom: 6 }
 };
-let mapCityPanelState = { tab: 'province', filter: '', initial: '全部', current: '北京' };
+let mapCityPanelState = { scope: 'domestic', tab: 'province', filter: '', initial: '全部', current: '北京' };
 
 let map, marker;
 let mapBaseLayer;
@@ -144,6 +145,20 @@ function getKnownMapCityNames() {
             cityNames.add(cityName);
         });
     });
+    if (typeof window !== 'undefined' && Array.isArray(window.countryRegionPoints)) {
+        window.countryRegionPoints.forEach(function(country) {
+            if (country && country.name) {
+                cityNames.add(country.name);
+            }
+        });
+    }
+    if (typeof window !== 'undefined' && Array.isArray(window.worldCityPoints)) {
+        window.worldCityPoints.forEach(function(city) {
+            if (city && city.name) {
+                cityNames.add(city.name);
+            }
+        });
+    }
     return cityNames;
 }
 
@@ -155,7 +170,44 @@ function sanitizeMapCityName(value) {
     if (MAP_CITY_MOJIBAKE_ALIAS[raw]) {
         return MAP_CITY_MOJIBAKE_ALIAS[raw];
     }
+    const countryPoint = typeof findCountryPointByKeyword === 'function' ? findCountryPointByKeyword(raw) : null;
+    if (countryPoint && countryPoint.nameZh) {
+        return countryPoint.nameZh;
+    }
+    const builtinPoint = typeof findBuiltinPlacePointByKeyword === 'function' ? findBuiltinPlacePointByKeyword(raw) : null;
+    if (builtinPoint && builtinPoint.nameZh) {
+        return builtinPoint.nameZh;
+    }
     return getKnownMapCityNames().has(raw) ? raw : '北京';
+}
+
+function getMapScopeConfig() {
+    return mapCityPanelState.scope === 'global'
+        ? { primaryTab: 'country', primaryLabel: '按国家', secondaryLabel: '按城市', searchPlaceholder: '请输入国家或城市' }
+        : { primaryTab: 'province', primaryLabel: '按省份', secondaryLabel: '按城市', searchPlaceholder: '请输入城市' };
+}
+
+function ensureMapScopeTabs(dropdown) {
+    if (!dropdown) {
+        return null;
+    }
+    let scopeTabs = dropdown.querySelector('#mapCityScopeTabs');
+    if (!scopeTabs) {
+        scopeTabs = document.createElement('div');
+        scopeTabs.id = 'mapCityScopeTabs';
+        scopeTabs.className = 'map-city-scope-tabs';
+        scopeTabs.innerHTML = [
+            '<button class="map-city-scope-tab active" type="button" data-city-scope="domestic">国内</button>',
+            '<button class="map-city-scope-tab" type="button" data-city-scope="global">全球</button>'
+        ].join('');
+        const hotline = dropdown.querySelector('.map-city-hotline');
+        if (hotline) {
+            dropdown.insertBefore(scopeTabs, hotline);
+        } else {
+            dropdown.insertBefore(scopeTabs, dropdown.firstChild);
+        }
+    }
+    return scopeTabs;
 }
 
 function closeMapCityDropdown(dropdown) {
@@ -337,6 +389,7 @@ function initMapCitySelector() {
 
     syncMapSearchKeyword(legacyInput ? legacyInput.value : searchInput.value);
     updateMapCityLabel();
+    ensureMapScopeTabs(dropdown);
     renderMapCityDropdown();
 
     if (toolbar.dataset.citySelectorReady === '1') {
@@ -391,16 +444,30 @@ function initMapCitySelector() {
         });
     }
 
-    document.querySelectorAll('[data-city-tab]').forEach(function(tabButton) {
-        tabButton.addEventListener('click', function() {
-            const nextTab = tabButton.getAttribute('data-city-tab') || 'province';
-            if (mapCityPanelState.tab === nextTab) {
-                return;
+    dropdown.addEventListener('click', function(e) {
+        const scopeButton = e.target.closest('[data-city-scope]');
+        if (scopeButton) {
+            const nextScope = scopeButton.getAttribute('data-city-scope') || 'domestic';
+            if (mapCityPanelState.scope !== nextScope) {
+                mapCityPanelState.scope = nextScope;
+                mapCityPanelState.tab = nextScope === 'global' ? 'country' : 'province';
+                mapCityPanelState.initial = '全部';
+                mapCityPanelState.filter = '';
+                renderMapCityDropdown();
             }
-            mapCityPanelState.tab = nextTab;
-            mapCityPanelState.initial = '全部';
-            renderMapCityDropdown();
-        });
+            e.stopPropagation();
+            return;
+        }
+        const tabButton = e.target.closest('[data-city-tab]');
+        if (tabButton) {
+            const nextTab = tabButton.getAttribute('data-city-tab') || getMapScopeConfig().primaryTab;
+            if (mapCityPanelState.tab !== nextTab) {
+                mapCityPanelState.tab = nextTab;
+                mapCityPanelState.initial = '全部';
+                renderMapCityDropdown();
+            }
+            e.stopPropagation();
+        }
     });
 
     dropdown.addEventListener('click', function(e) {
@@ -437,10 +504,28 @@ function renderMapCityDropdown() {
         filterInput.value = mapCityPanelState.filter;
     }
 
+    const scopeConfig = getMapScopeConfig();
+    const scopeTabs = ensureMapScopeTabs(dropdown);
+    if (scopeTabs) {
+        scopeTabs.querySelectorAll('[data-city-scope]').forEach(function(button) {
+            button.classList.toggle('active', button.getAttribute('data-city-scope') === mapCityPanelState.scope);
+        });
+    }
+
     document.querySelectorAll('[data-city-tab]').forEach(function(tabButton) {
         const isActive = tabButton.getAttribute('data-city-tab') === mapCityPanelState.tab;
         tabButton.classList.toggle('active', isActive);
+        const tabType = tabButton.getAttribute('data-city-tab');
+        if (tabType === 'province' || tabType === 'country') {
+            tabButton.textContent = scopeConfig.primaryLabel;
+            tabButton.setAttribute('data-city-tab', scopeConfig.primaryTab);
+        } else {
+            tabButton.textContent = scopeConfig.secondaryLabel;
+        }
     });
+    if (filterInput) {
+        filterInput.placeholder = scopeConfig.searchPlaceholder;
+    }
 
     renderMapHotCities();
     renderMapCityInitials();
@@ -454,7 +539,8 @@ function renderMapHotCities() {
         return;
     }
 
-    hotList.innerHTML = MAP_HOT_CITY_NAMES.map(function(cityName) {
+    const hotNames = mapCityPanelState.scope === 'global' ? MAP_GLOBAL_HOT_PLACE_NAMES : MAP_HOT_CITY_NAMES;
+    hotList.innerHTML = hotNames.map(function(cityName) {
         const activeClass = cityName === mapCityPanelState.current ? ' active' : '';
         return `<button type="button" class="map-city-link${activeClass}" data-city-name="${cityName}">${cityName}</button>`;
     }).join('');
@@ -468,7 +554,7 @@ function renderMapCityInitials() {
         return;
     }
 
-    if (mapCityPanelState.tab !== 'city') {
+    if (mapCityPanelState.tab !== 'city' || mapCityPanelState.scope === 'global') {
         initialsContainer.style.display = 'none';
         initialsContainer.innerHTML = '';
         return;
@@ -496,11 +582,100 @@ function renderMapCityList() {
     }
 
     const keyword = String(mapCityPanelState.filter || '').trim();
+    if (mapCityPanelState.scope === 'global') {
+        if (mapCityPanelState.tab === 'city') {
+            renderMapGlobalCityList(listContainer, keyword);
+            return;
+        }
+        renderMapGlobalCountryList(listContainer, keyword);
+        return;
+    }
     if (mapCityPanelState.tab === 'city') {
         renderMapCityListByInitial(listContainer, keyword);
         return;
     }
     renderMapCityListByProvince(listContainer, keyword);
+}
+
+function renderMapGlobalCountryList(container, keyword) {
+    const normalizedKeyword = normalizeKeyword(keyword);
+    const labels = getAvailableCountryLabels()
+        .filter(function(country) { return country && country.name; })
+        .filter(function(country) {
+            if (!normalizedKeyword) {
+                return true;
+            }
+            if (normalizeKeyword(country.name).includes(normalizedKeyword)) {
+                return true;
+            }
+            return Array.isArray(country.aliases) && country.aliases.some(function(alias) {
+                return normalizeKeyword(alias).includes(normalizedKeyword);
+            });
+        })
+        .sort(function(left, right) {
+            return String(left.name).localeCompare(String(right.name), 'zh-Hans-CN');
+        });
+
+    if (labels.length === 0) {
+        container.innerHTML = '<div class="map-city-empty">未找到匹配的国家或地区</div>';
+        return;
+    }
+
+    const buttons = labels.map(function(country) {
+        const activeClass = country.name === mapCityPanelState.current ? ' active' : '';
+        return `<button type="button" class="map-city-link map-city-link-wide${activeClass}" data-city-name="${country.name}">${country.name}</button>`;
+    }).join('');
+
+    container.innerHTML = `<div class="map-city-group map-city-group-global"><div class="map-city-group-title">国家 / 地区</div><div class="map-city-group-items map-city-group-grid">${buttons}</div></div>`;
+    bindMapCityLinks(container);
+}
+
+function renderMapGlobalCityList(container, keyword) {
+    const normalizedKeyword = normalizeKeyword(keyword);
+    const worldCityPoints = (typeof window !== 'undefined' && Array.isArray(window.worldCityPoints)) ? window.worldCityPoints : [];
+    const grouped = new Map();
+
+    worldCityPoints.forEach(function(city) {
+        if (!city || !city.name || !city.country) {
+            return;
+        }
+        const matched = !normalizedKeyword
+            || normalizeKeyword(city.name).includes(normalizedKeyword)
+            || normalizeKeyword(city.country).includes(normalizedKeyword)
+            || (Array.isArray(city.aliases) && city.aliases.some(function(alias) {
+                return normalizeKeyword(alias).includes(normalizedKeyword);
+            }));
+        if (!matched) {
+            return;
+        }
+        if (!grouped.has(city.country)) {
+            grouped.set(city.country, []);
+        }
+        grouped.get(city.country).push(city);
+    });
+
+    const countries = Array.from(grouped.keys()).sort(function(left, right) {
+        return String(left).localeCompare(String(right), 'zh-Hans-CN');
+    });
+
+    if (countries.length === 0) {
+        container.innerHTML = '<div class="map-city-empty">未找到匹配的国家或城市</div>';
+        return;
+    }
+
+    container.innerHTML = countries.map(function(countryName) {
+        const cityButtons = grouped.get(countryName)
+            .sort(function(left, right) {
+                return String(left.name).localeCompare(String(right.name), 'zh-Hans-CN');
+            })
+            .map(function(city) {
+                const activeClass = city.name === mapCityPanelState.current ? ' active' : '';
+                return `<button type="button" class="map-city-link${activeClass}" data-city-name="${city.name}">${city.name}</button>`;
+            }).join('');
+        return `<div class="map-city-group map-city-group-global"><div class="map-city-group-title">${countryName}</div><div class="map-city-group-items map-city-group-grid">${cityButtons}</div></div>`;
+    }).join('');
+
+    bindMapCityLinks(container);
 }
 
 function renderMapCityListByProvince(container, keyword) {
@@ -607,7 +782,9 @@ function selectMapCity(cityName) {
     mapCityPanelState.current = nextCityName;
     updateMapCityLabel();
 
-    const targetPoint = findBuiltinPlacePointByKeyword(nextCityName) || MAP_CITY_FALLBACK_POINTS[nextCityName];
+    const targetPoint = findBuiltinPlacePointByKeyword(nextCityName)
+        || findCountryPointByKeyword(nextCityName)
+        || MAP_CITY_FALLBACK_POINTS[nextCityName];
     if (targetPoint && Number.isFinite(Number(targetPoint.lat)) && Number.isFinite(Number(targetPoint.lng))) {
         map.setView([Number(targetPoint.lat), Number(targetPoint.lng)], Number(targetPoint.zoom) || map.getZoom());
     }
@@ -646,7 +823,26 @@ function getWorldCityEnglishName(city) {
         return '';
     }
     const englishAlias = city.aliases.find(function(alias) {
-        return /^[A-Za-z][A-Za-z\s.'-]*$/.test(String(alias || '').trim());
+        return /^[A-Za-z][A-Za-z\s.'()-]*$/.test(String(alias || '').trim());
+    });
+    if (!englishAlias) {
+        return '';
+    }
+    return String(englishAlias)
+        .trim()
+        .split(/\s+/)
+        .map(function(part) {
+            return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+        })
+        .join(' ');
+}
+
+function getCountryEnglishName(country) {
+    if (!country || !Array.isArray(country.aliases)) {
+        return '';
+    }
+    const englishAlias = country.aliases.find(function(alias) {
+        return /^[A-Za-z][A-Za-z\s.'()-]*$/.test(String(alias || '').trim());
     });
     if (!englishAlias) {
         return '';
@@ -661,7 +857,7 @@ function getWorldCityEnglishName(city) {
 }
 
 function bindForeignCityTooltip(meta) {
-    if (!marker || !meta || !meta.isForeignCity || !meta.nameZh || !meta.nameEn) {
+    if (!marker || !meta || !meta.isForeignLabel || !meta.nameZh || !meta.nameEn) {
         return;
     }
     marker.bindTooltip(
@@ -728,7 +924,7 @@ async function searchAddress() {
         const countryPoint = findCountryPointByKeyword(keyword);
         if (countryPoint) {
             map.setZoom(Number(countryPoint.zoom) || 5);
-            updateData(countryPoint.lat, countryPoint.lng);
+            updateData(countryPoint.lat, countryPoint.lng, countryPoint);
             return;
         }
         const builtinPoint = findBuiltinPlacePointByKeyword(keyword);
@@ -865,12 +1061,22 @@ function findCountryPointByKeyword(keyword) {
         : getCountryAliasKeyword(keyword);
     const exactMatch = labels.find((country) => normalizeKeyword(country.name) === normalizedKeyword);
     if (exactMatch) {
-        return exactMatch;
+        return {
+            ...exactMatch,
+            isForeignLabel: exactMatch.name !== '中国',
+            nameZh: exactMatch.name,
+            nameEn: getCountryEnglishName(exactMatch)
+        };
     }
     if (aliasName) {
         const aliasMatch = labels.find((country) => country.name === aliasName);
         if (aliasMatch) {
-            return aliasMatch;
+            return {
+                ...aliasMatch,
+                isForeignLabel: aliasMatch.name !== '中国',
+                nameZh: aliasMatch.name,
+                nameEn: getCountryEnglishName(aliasMatch)
+            };
         }
     }
     const aliasListMatch = labels.find(function(country) {
@@ -879,12 +1085,22 @@ function findCountryPointByKeyword(keyword) {
         });
     });
     if (aliasListMatch) {
-        return aliasListMatch;
+        return {
+            ...aliasListMatch,
+            isForeignLabel: aliasListMatch.name !== '中国',
+            nameZh: aliasListMatch.name,
+            nameEn: getCountryEnglishName(aliasListMatch)
+        };
     }
     if (normalizedKeyword.length >= 2) {
         const fuzzyMatch = labels.find((country) => normalizeKeyword(country.name).includes(normalizedKeyword));
         if (fuzzyMatch) {
-            return fuzzyMatch;
+            return {
+                ...fuzzyMatch,
+                isForeignLabel: fuzzyMatch.name !== '中国',
+                nameZh: fuzzyMatch.name,
+                nameEn: getCountryEnglishName(fuzzyMatch)
+            };
         }
     }
     return null;
@@ -910,7 +1126,7 @@ function findBuiltinPlacePointByKeyword(keyword) {
                     lat: matchedWorldCity.lat,
                     lng: matchedWorldCity.lng,
                     zoom: matchedWorldCity.zoom || 9,
-                    isForeignCity: true,
+                    isForeignLabel: true,
                     nameZh: matchedWorldCity.name,
                     nameEn: getWorldCityEnglishName(matchedWorldCity)
                 };
@@ -927,7 +1143,7 @@ function findBuiltinPlacePointByKeyword(keyword) {
                 lat: directWorldCityMatch.lat,
                 lng: directWorldCityMatch.lng,
                 zoom: directWorldCityMatch.zoom || 9,
-                isForeignCity: true,
+                isForeignLabel: true,
                 nameZh: directWorldCityMatch.name,
                 nameEn: getWorldCityEnglishName(directWorldCityMatch)
             };
