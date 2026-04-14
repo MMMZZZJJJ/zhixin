@@ -34,6 +34,9 @@ function addCountryLabels(map) {
 
 function updateLabelsVisibility(map) {
     const currentZoom = map.getZoom();
+    const bounds = typeof map.getBounds === 'function' ? map.getBounds() : null;
+    const usedGrid = new Set();
+    const gridSize = currentZoom <= 4 ? 120 : currentZoom <= 5 ? 90 : currentZoom <= 6 ? 70 : 54;
 
     labelLayers.forEach(function(marker, index) {
         const country = countryLabels[index];
@@ -41,14 +44,41 @@ function updateLabelsVisibility(map) {
             return;
         }
         const labelZoom = Number(country.labelZoom || country.zoom || 6);
-        if (currentZoom >= labelZoom) {
-            if (!map.hasLayer(marker)) {
-                marker.addTo(map);
+        if (currentZoom < labelZoom) {
+            if (map.hasLayer(marker)) {
+                map.removeLayer(marker);
             }
             return;
         }
-        if (map.hasLayer(marker)) {
-            map.removeLayer(marker);
+
+        const latLng = marker.getLatLng ? marker.getLatLng() : null;
+        if (bounds && latLng && typeof bounds.contains === 'function' && !bounds.contains(latLng)) {
+            if (map.hasLayer(marker)) {
+                map.removeLayer(marker);
+            }
+            return;
+        }
+
+        if (latLng && typeof map.latLngToContainerPoint === 'function') {
+            const point = map.latLngToContainerPoint(latLng);
+            if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+                if (map.hasLayer(marker)) {
+                    map.removeLayer(marker);
+                }
+                return;
+            }
+            const gridKey = `${Math.round(point.x / gridSize)}:${Math.round(point.y / gridSize)}`;
+            if (usedGrid.has(gridKey)) {
+                if (map.hasLayer(marker)) {
+                    map.removeLayer(marker);
+                }
+                return;
+            }
+            usedGrid.add(gridKey);
+        }
+
+        if (!map.hasLayer(marker)) {
+            marker.addTo(map);
         }
     });
 }
