@@ -152,6 +152,9 @@
 
 #resultModal .modal-body {
     padding: 22px 28px 18px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 #resultModal .modal-footer {
@@ -208,15 +211,17 @@
 }
 
 #resultModal .seat-result-list {
-    max-height: calc(96vh - 310px);
+    flex: 1 1 auto;
+    min-height: 5.2rem;
+    max-height: calc(96vh - 280px);
     overflow-x: auto;
     overflow-y: auto;
     border-radius: 10px;
 }
 
 #resultModal .seat-row {
-    min-width: 1500px;
-    grid-template-columns: 150px 160px 258px 288px 110px 224px 180px;
+    min-width: 1540px;
+    grid-template-columns: 150px 160px 258px 288px 110px 224px 196px;
     gap: 12px;
     min-height: 58px;
     padding: 0 14px;
@@ -253,8 +258,8 @@
 }
 
 #resultModal .seat-cell-actions {
-    justify-content: flex-end;
-    padding-right: 6px;
+    justify-content: center;
+    padding-right: 0;
 }
 
 #resultModal .btn-submit-task-inline {
@@ -336,12 +341,13 @@
     }
 
     #resultModal .seat-result-list {
-        max-height: calc(94vh - 292px);
+        min-height: 4.5rem;
+        max-height: calc(94vh - 264px);
     }
 
     #resultModal .seat-row {
-        min-width: 1280px;
-        grid-template-columns: 134px 144px 212px 228px 96px 186px 160px;
+        min-width: 1320px;
+        grid-template-columns: 134px 144px 212px 228px 96px 186px 176px;
         min-height: 54px;
         gap: 10px;
         padding: 0 12px;
@@ -399,12 +405,13 @@
     }
 
     #resultModal .seat-result-list {
-        max-height: calc(94vh - 276px);
+        min-height: 4rem;
+        max-height: calc(94vh - 252px);
     }
 
     #resultModal .seat-row {
-        min-width: 1060px;
-        grid-template-columns: 122px 116px 176px 176px 82px 148px 140px;
+        min-width: 1100px;
+        grid-template-columns: 122px 116px 176px 176px 82px 148px 156px;
         min-height: 50px;
         gap: 10px;
         padding: 0 10px;
