@@ -207,6 +207,69 @@
     font-size: 56px;
 }
 
+#resultModal .seat-result-list {
+    max-height: calc(96vh - 360px);
+    overflow-x: auto;
+    overflow-y: auto;
+    border-radius: 10px;
+}
+
+#resultModal .seat-row {
+    min-width: 1440px;
+    grid-template-columns: 156px 168px 270px 296px 118px 232px 132px;
+    gap: 14px;
+    min-height: 62px;
+    padding: 0 16px;
+}
+
+#resultModal .seat-row-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    min-height: 54px;
+    box-shadow: 0 1px 0 rgba(85, 188, 212, 0.16);
+}
+
+#resultModal .seat-row-header .seat-cell {
+    font-size: 17px;
+    line-height: 1.25;
+}
+
+#resultModal .seat-cell {
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+#resultModal .seat-cell-index {
+    font-size: 15px;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+#resultModal .seat-cell-time,
+#resultModal .seat-cell-upload {
+    font-size: 15px;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    font-weight: 500;
+    letter-spacing: .2px;
+}
+
+#resultModal .seat-cell-actions {
+    justify-content: center;
+}
+
+#resultModal .btn-submit-task-inline {
+    min-width: 108px;
+    height: 40px;
+    padding: 0 14px;
+    font-size: 15px;
+    border-radius: 8px;
+}
+
+#resultModal .seat-pagination {
+    margin-top: 18px;
+}
+
 .result-info::before {
     content: '🌍';
     position: absolute;
@@ -272,6 +335,32 @@
         padding-left: 20px;
         padding-right: 20px;
     }
+
+    #resultModal .seat-result-list {
+        max-height: calc(94vh - 330px);
+    }
+
+    #resultModal .seat-row {
+        min-width: 1220px;
+        grid-template-columns: 138px 148px 224px 236px 104px 196px 122px;
+        min-height: 56px;
+        gap: 12px;
+        padding: 0 12px;
+    }
+
+    #resultModal .seat-cell {
+        font-size: 14px;
+    }
+
+    #resultModal .seat-row-header .seat-cell {
+        font-size: 15px;
+    }
+
+    #resultModal .seat-cell-time,
+    #resultModal .seat-cell-upload,
+    #resultModal .btn-submit-task-inline {
+        font-size: 13px;
+    }
 }
 
 @media screen and (max-width: 768px) {
@@ -304,6 +393,29 @@
 
     #resultModal .result-info p {
         font-size: 15px;
+    }
+
+    #resultModal .seat-result-list {
+        max-height: calc(94vh - 300px);
+    }
+
+    #resultModal .seat-row {
+        min-width: 980px;
+        grid-template-columns: 126px 120px 182px 184px 88px 156px 112px;
+        min-height: 52px;
+        gap: 10px;
+        padding: 0 10px;
+    }
+
+    #resultModal .seat-cell {
+        font-size: 13px;
+    }
+
+    #resultModal .seat-row-header .seat-cell,
+    #resultModal .seat-cell-time,
+    #resultModal .seat-cell-upload,
+    #resultModal .btn-submit-task-inline {
+        font-size: 12px;
     }
 }
 

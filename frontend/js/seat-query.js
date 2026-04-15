@@ -132,7 +132,7 @@ function renderSeatModalPage() {
         </div>
         <div class="seat-result-list">
             <div class="seat-row seat-row-header">
-                <div class="seat-cell">序号</div>
+                <div class="seat-cell">可拍摄时段</div>
                 <div class="seat-cell">卫星名称</div>
                 <div class="seat-cell seat-cell-time">中心时间</div>
                 <div class="seat-cell">成像模式</div>
@@ -152,7 +152,7 @@ function renderSeatModalPage() {
 
         html += `
             <div class="seat-row">
-                <div class="seat-cell seat-cell-index">${absoluteIndex + 1}</div>
+                <div class="seat-cell seat-cell-index">可拍摄时段${absoluteIndex + 1}</div>
                 <div class="seat-cell" title="${sourceName}">${sourceName}</div>
                 <div class="seat-cell seat-cell-time" title="${centralityTime}">${centralityTime}</div>
                 <div class="seat-cell" title="${imagingModeText}">${imagingModeText}</div>
