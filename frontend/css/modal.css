@@ -152,11 +152,8 @@
 
 #resultModal .modal-body {
     padding: 22px 28px 18px;
-    display: grid;
-    grid-template-rows: auto minmax(360px, 1fr) auto;
-    gap: 16px;
-    min-height: 0;
-    overflow: hidden;
+    display: block;
+    overflow-y: auto;
 }
 
 #resultModal .modal-footer {
@@ -199,10 +196,8 @@
 }
 
 #resultModal .result-info {
-    flex: 0 0 auto;
     padding: 16px 20px;
-    margin-bottom: 0;
-    overflow: hidden;
+    margin-bottom: 18px;
 }
 
 #resultModal .result-info p {
@@ -217,16 +212,13 @@
 
 #resultModal .seat-result-list {
     width: 100%;
-    height: 100%;
-    min-height: 0;
-    max-height: none;
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: visible;
     border-radius: 10px;
+    margin-bottom: 18px;
 }
 
 #resultModal .seat-row {
-    width: 100%;
     min-width: 1280px;
     grid-template-columns: 142px 150px minmax(220px, 1fr) minmax(260px, 1.15fr) 104px minmax(200px, .85fr) 148px;
     gap: 10px;
@@ -339,8 +331,6 @@
     }
 
     #resultModal .modal-body {
-        grid-template-rows: auto minmax(320px, 1fr) auto;
-        gap: 14px;
         padding: 18px 20px 16px;
     }
 
@@ -351,8 +341,7 @@
     }
 
     #resultModal .seat-result-list {
-        min-height: 0;
-        max-height: none;
+        margin-bottom: 16px;
     }
 
     #resultModal .seat-row {
@@ -400,8 +389,6 @@
     }
 
     #resultModal .modal-body {
-        grid-template-rows: auto minmax(280px, 1fr) auto;
-        gap: 12px;
         padding: 18px;
     }
 
@@ -418,8 +405,7 @@
     }
 
     #resultModal .seat-result-list {
-        min-height: 0;
-        max-height: none;
+        margin-bottom: 14px;
     }
 
     #resultModal .seat-row {
